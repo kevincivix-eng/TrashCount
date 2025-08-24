@@ -1,69 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waste Management Simulator</title>
+    <title>סימולטור ניהול פסולת</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .alert-box {
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-        .alert-box.show {
-            opacity: 1;
-        }
+        .alert-box { opacity: 0; transition: opacity 0.3s ease-in-out; }
+        .alert-box.show { opacity: 1; }
         input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type="number"] {
-            -moz-appearance: textfield;
-        }
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold text-center text-green-700 mb-8">Waste Management Simulator</h1>
-        
+
+        <!-- Header with logos -->
+        <div class="flex items-center justify-center gap-60 mb-4">
+            <img src="https://i.postimg.cc/fRh195Zp/Civix-Logo-01.png" alt="לוגו צוותי חדשנות נגב מזרחי" class="h-16">
+            <img src="https://i.postimg.cc/FFd6CwHw/Asset-3-2x.png" alt="לוגו Civix" class="h-16">
+        </div>
+
+        <h1 class="text-3xl font-bold text-center text-black mb-8">סימולטור ניהול פסולת</h1>
+
         <!-- Dropdown and Cost Input -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
-                <label for="municipality" class="block text-sm font-medium text-gray-700 mb-1">Choose Municipality</label>
+                <label for="municipality" class="block text-sm font-medium text-gray-700 mb-1">בחר/י רשות מקומית</label>
                 <select id="municipality" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
-                    <option value="">Select a municipality</option>
-                    <option value="Kuseife">Kuseife</option>
-                    <option value="Yeruham">Yeruham</option>
-                    <option value="Mitzpe Ramon">Mitzpe Ramon</option>
-                    <option value="Central Arava">Central Arava</option>
-                    <option value="Dimona">Dimona</option>
-                    <option value="Hura">Hura</option>
-                    <option value="Arad">Arad</option>
-                    <option value="Al-Kasom">Al-Kasom</option>
-                    <option value="Segev Shalom">Segev Shalom</option>
-                    <option value="Neve Midbar">Neve Midbar</option>
-                    <option value="Tel Sheva">Tel Sheva</option>
-                    <option value="Ramat Negev">Ramat Negev</option>
+                    <option value="">בחר/י רשות</option>
+                    <option value="Kuseife">כסייפה</option>
+                    <option value="Yeruham">ירוחם</option>
+                    <option value="Mitzpe Ramon">מצפה רמון</option>
+                    <option value="Central Arava">ערבה תיכונה</option>
+                    <option value="Dimona">דימונה</option>
+                    <option value="Hura">חורה</option>
+                    <option value="Arad">ערד</option>
+                    <option value="Al-Kasom">אל קסום</option>
+                    <option value="Segev Shalom">שגב שלום</option>
+                    <option value="Neve Midbar">נווה מדבר</option>
+                    <option value="Tel Sheva">תל שבע</option>
+                    <option value="Ramat Negev">רמת נגב</option>
                 </select>
             </div>
             <div>
-                <label for="costPerTon" class="block text-sm font-medium text-gray-700 mb-1">Cost per Ton of Landfill Waste (₪)</label>
-                <input type="number" id="costPerTon" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" placeholder="Enter cost per ton">
+                <label for="costPerTon" class="block text-sm font-medium text-gray-700 mb-1">עלות להטמנת טון פסולת (₪)</label>
+                <input type="number" id="costPerTon" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" placeholder="הקלד/י עלות לטון">
             </div>
         </div>
 
         <!-- Alert Box -->
-        <div id="alertBox" class="alert-box fixed top-4 right-4 max-w-md bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg hidden">
+        <div id="alertBox" class="alert-box fixed top-4 left-4 max-w-md bg-red-100 border-r-4 border-red-500 text-red-700 p-4 rounded shadow-lg hidden">
             <div class="flex items-center">
                 <div class="flex-shrink-0">
                     <i class="fas fa-exclamation-circle text-red-500"></i>
                 </div>
-                <div class="ml-3">
-                    <p id="alertMessage" class="text-sm">Cannot increase recycled waste further. No landfill waste available for conversion.</p>
+                <div class="mr-3">
+                    <p id="alertMessage" class="text-sm">לא ניתן להגדיל מיחזור – אין עוד פסולת להטמנה שאפשר להמיר.</p>
                 </div>
-                <div class="ml-auto pl-3">
+                <div class="ml-auto pr-3">
                     <button id="closeAlert" class="text-red-500 hover:text-red-700">
                         <i class="fas fa-times"></i>
                     </button>
@@ -75,19 +72,19 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <!-- Recyclables Table -->
             <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-semibold text-green-700 mb-4">Recyclable Materials</h2>
+                <h2 class="text-xl font-semibold text-green-700 mb-4">חומרים למיחזור</h2>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Original (tons)</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Simulated (tons)</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">חומר</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">מקור (טון)</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סימולציה (טון)</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">פעולות</th>
                             </tr>
                         </thead>
                         <tbody id="recyclablesTable" class="bg-white divide-y divide-gray-200">
-                            <!-- Will be populated by JavaScript -->
+                            <!-- populated by JS -->
                         </tbody>
                     </table>
                 </div>
@@ -95,18 +92,18 @@
 
             <!-- Non-Recyclables Table -->
             <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-semibold text-green-700 mb-4">Non-Recyclable Waste</h2>
+                <h2 class="text-xl font-semibold text-green-700 mb-4">פסולת לא ממוחזרת</h2>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Original (tons)</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Simulated (tons)</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סוג</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">מקור (טון)</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סימולציה (טון)</th>
                             </tr>
                         </thead>
                         <tbody id="nonRecyclablesTable" class="bg-white divide-y divide-gray-200">
-                            <!-- Will be populated by JavaScript -->
+                            <!-- populated by JS -->
                         </tbody>
                     </table>
                 </div>
@@ -115,29 +112,29 @@
 
         <!-- Summary Panel -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 class="text-xl font-semibold text-green-700 mb-4">Summary</h2>
+            <h2 class="text-xl font-semibold text-green-700 mb-4">סיכום</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-sm font-medium text-gray-500">Total Waste (original)</h3>
+                    <h3 class="text-sm font-medium text-gray-500">סה״כ פסולת (מקור)</h3>
                     <p id="totalWasteOriginal" class="text-2xl font-bold text-gray-800">0</p>
-                    <p class="text-sm text-gray-500">tons</p>
+                    <p class="text-sm text-gray-500">טון</p>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-sm font-medium text-gray-500">Recycled Waste</h3>
-                    <p id="recycledOriginal" class="text-lg text-gray-600">Original: 0</p>
-                    <p id="recycledSimulated" class="text-lg text-green-600 font-bold">Simulated: 0</p>
-                    <p class="text-sm text-gray-500">tons</p>
+                    <h3 class="text-sm font-medium text-gray-500">פסולת ממוחזרת</h3>
+                    <p id="recycledOriginal" class="text-lg text-gray-600">מקור: 0</p>
+                    <p id="recycledSimulated" class="text-lg text-green-600 font-bold">סימולציה: 0</p>
+                    <p class="text-sm text-gray-500">טון</p>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-sm font-medium text-gray-500">Non-Recycled Waste</h3>
-                    <p id="nonRecycledOriginal" class="text-lg text-gray-600">Original: 0</p>
-                    <p id="nonRecycledSimulated" class="text-lg text-green-600 font-bold">Simulated: 0</p>
-                    <p class="text-sm text-gray-500">tons</p>
+                    <h3 class="text-sm font-medium text-gray-500">פסולת לא ממוחזרת</h3>
+                    <p id="nonRecycledOriginal" class="text-lg text-gray-600">מקור: 0</p>
+                    <p id="nonRecycledSimulated" class="text-lg text-green-600 font-bold">סימולציה: 0</p>
+                    <p class="text-sm text-gray-500">טון</p>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-sm font-medium text-gray-500">Estimated Savings</h3>
-                    <p id="originalCost" class="text-sm text-gray-600">Original Cost: ₪0</p>
-                    <p id="simulatedCost" class="text-sm text-gray-600">Simulated Cost:  ₪0</p>
+                    <h3 class="text-sm font-medium text-gray-500">חיסכון מוערך</h3>
+                    <p id="originalCost" class="text-sm text-gray-600">עלות מקורית: ₪0</p>
+                    <p id="simulatedCost" class="text-sm text-gray-600">עלות בסימולציה: ₪0</p>
                     <p id="estimatedSavings" class="text-xl font-bold text-green-600">₪0</p>
                 </div>
             </div>
@@ -146,13 +143,13 @@
         <!-- Reset Button -->
         <div class="flex justify-center">
             <button id="resetButton" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
-                <i class="fas fa-redo mr-2"></i>Reset Simulation
+                <i class="fas fa-redo ml-2"></i>איפוס סימולציה
             </button>
         </div>
     </div>
 
     <script>
-        // Dataset
+        // Dataset (unchanged keys)
         const municipalities = {
             "Kuseife": {
                 recyclables: {
@@ -480,11 +477,39 @@
             }
         };
 
+        // Hebrew label maps (display only)
+        const labelsRecyclables = {
+            "Paper": "נייר",
+            "Cardboard": "קרטון",
+            "Plastic": "פלסטיק",
+            "Glass": "זכוכית",
+            "Electronic Waste": "פסולת אלקטרונית",
+            "Batteries and Accumulators": "סוללות ומצברים",
+            "Orange Bin (Plastic Packaging)": "פח כתום (אריזות)",
+            "Textiles": "טקסטיל",
+            "Oil": "שמנים",
+            "Metal and Iron": "מתכות וברזל",
+            "Home compost / Brown Bin / Organic Waste": "קומפוסט ביתי / פח חום / אורגני",
+            "Tires": "צמיגים",
+            "Nylon (Non-Agricultural)": "ניילון (לא חקלאי)",
+            "Bulky Waste": "פסולת גושית ממוחזרת",
+            "Prunings": "גזם ממוחזר",
+            "Other": "אחר",
+            "Refuse-Derived Fuel (RDF)": "דלק מפסולת (RDF)"
+        };
+
+        const labelsNonRecyclables = {
+            "General Household Landfill": "אשפה ביתית להטמנה",
+            "General Bulky Landfill": "פסולת גושית להטמנה",
+            "Prunings Sent to Landfill": "גזם להטמנה"
+        };
+
         // State
         let currentMunicipality = null;
         let simulatedValues = {};
         let originalNonRecyclables = {};
         let costPerTon = 0;
+        let landfillSimulated = 0; // מצב ההטמנה בסימולציה
 
         // DOM Elements
         const municipalitySelect = document.getElementById('municipality');
@@ -504,43 +529,69 @@
         const alertMessage = document.getElementById('alertMessage');
         const closeAlert = document.getElementById('closeAlert');
 
-        // Event Listeners
+        // Events
         municipalitySelect.addEventListener('change', loadMunicipalityData);
         costPerTonInput.addEventListener('input', updateCostCalculations);
         resetButton.addEventListener('click', resetSimulation);
         closeAlert.addEventListener('click', hideAlert);
 
-        // Helper function to format numbers with commas
+        // Helpers
         function formatNumber(num) {
             return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }
 
-        // Functions
+        function showAlert(message) {
+            alertMessage.textContent = message;
+            alertBox.classList.remove('hidden');
+            alertBox.classList.add('show');
+            setTimeout(hideAlert, 5000);
+        }
+
+        function hideAlert() {
+            alertBox.classList.remove('show');
+            alertBox.classList.add('hidden');
+        }
+
+        function syncLandfillCell() {
+            const cell = document.querySelector('.simulated-value[data-type="General Household Landfill"]');
+            if (cell) cell.textContent = landfillSimulated.toFixed(2);
+        }
+
+        function setButtonsAvailability() {
+            const disabled = landfillSimulated <= 0.000001;
+            document.querySelectorAll('.increase-btn').forEach(btn => {
+                btn.disabled = disabled;
+                btn.classList.toggle('opacity-50', disabled);
+                btn.classList.toggle('cursor-not-allowed', disabled);
+            });
+        }
+
+        // Load data for selected municipality
         function loadMunicipalityData() {
             const selectedMunicipality = municipalitySelect.value;
             if (!selectedMunicipality) return;
 
             currentMunicipality = selectedMunicipality;
             const data = municipalities[selectedMunicipality];
-            
-            // Reset simulated values
-            simulatedValues = {...data.recyclables};
-            originalNonRecyclables = {...data.nonRecyclables};
-            
-            // Populate recyclables table
+
+            simulatedValues = { ...data.recyclables };
+            originalNonRecyclables = { ...data.nonRecyclables };
+            landfillSimulated = originalNonRecyclables["General Household Landfill"];
+
+            // Recyclables table
             recyclablesTable.innerHTML = '';
             Object.entries(data.recyclables).forEach(([material, value]) => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${material}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${labelsRecyclables[material] || material}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatNumber(value)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">
-                        <input type="number" class="w-24 px-2 py-1 border border-gray-300 rounded simulated-input" 
+                        <input type="number" class="w-24 px-2 py-1 border border-gray-300 rounded simulated-input"
                                data-material="${material}" value="${value.toFixed(2)}">
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div class="flex items-center space-x-2">
+                        <div class="flex items-center space-x-2 space-x-reverse">
                             <button class="decrease-btn px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200" data-material="${material}">
                                 <i class="fas fa-minus"></i>
                             </button>
@@ -553,12 +604,10 @@
                 recyclablesTable.appendChild(row);
             });
 
-            // Add event listeners to input fields
+            // Attach events
             document.querySelectorAll('.simulated-input').forEach(input => {
                 input.addEventListener('change', updateSimulatedValue);
             });
-
-            // Add event listeners to buttons
             document.querySelectorAll('.increase-btn').forEach(btn => {
                 btn.addEventListener('click', increaseRecyclable);
             });
@@ -566,152 +615,126 @@
                 btn.addEventListener('click', decreaseRecyclable);
             });
 
-            // Populate non-recyclables table
+            // Non-recyclables table
             nonRecyclablesTable.innerHTML = '';
             Object.entries(data.nonRecyclables).forEach(([type, value]) => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
+                const simVal = (type === "General Household Landfill" ? landfillSimulated : value);
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${type}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${labelsNonRecyclables[type] || type}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${value.toFixed(2)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold simulated-value" data-type="${type}">${value.toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold simulated-value" data-type="${type}">
+                        ${simVal.toFixed(2)}
+                    </td>
                 `;
                 nonRecyclablesTable.appendChild(row);
             });
 
-            // Update summary
+            // Summary
             totalWasteOriginal.textContent = data.totalWaste.toFixed(2);
+            setButtonsAvailability();
             updateSummary();
         }
 
+        // Button handlers with mass-balance
         function increaseRecyclable(e) {
-            const material = e.target.getAttribute('data-material') || 
-                            e.target.parentElement.getAttribute('data-material');
-            
-            // Check if we have landfill waste to convert
-            const generalLandfillElement = document.querySelector('.simulated-value[data-type="General Household Landfill"]');
-            const currentLandfill = parseFloat(generalLandfillElement.textContent);
-            
-            if (currentLandfill <= 0) {
-                showAlert("No more landfill waste to convert. Simulation limit reached.");
-                return;
-            }
-            
-            // Update recyclable value
-            simulatedValues[material] += 1;
-            
-            // Update landfill value
-            const newLandfill = currentLandfill - 1;
-            generalLandfillElement.textContent = newLandfill.toFixed(2);
-            
-            // Update the row in recyclables table
-            const row = e.target.closest('tr');
-            row.querySelector('td:nth-child(3)').textContent = simulatedValues[material].toFixed(2);
-            
-            // Update summary
-            updateSummary();
-            
-            // Disable increase buttons if landfill is 0
-            if (newLandfill <= 0) {
-                document.querySelectorAll('.increase-btn').forEach(btn => {
-                    btn.disabled = true;
-                    btn.classList.add('opacity-50', 'cursor-not-allowed');
-                });
-            }
-        }
+            const material = e.target.getAttribute('data-material') || e.target.parentElement.getAttribute('data-material');
+            if (landfillSimulated <= 0) { showAlert("לא נותרה פסולת להטמנה שניתן להמיר למיחזור."); return; }
 
-        function updateSimulatedValue(e) {
-            const material = e.target.getAttribute('data-material');
-            const newValue = parseFloat(e.target.value) || 0;
-            simulatedValues[material] = newValue;
+            simulatedValues[material] = (simulatedValues[material] || 0) + 1;
+            landfillSimulated -= 1;
+
+            const row = e.target.closest('tr');
+            row.querySelector('input.simulated-input').value = simulatedValues[material].toFixed(2);
+
+            syncLandfillCell();
             updateSummary();
+            setButtonsAvailability();
         }
 
         function decreaseRecyclable(e) {
-            const material = e.target.getAttribute('data-material') || 
-                            e.target.parentElement.getAttribute('data-material');
-            
-            // Check if we can decrease (value must be > 0)
-            if (simulatedValues[material] <= 0) return;
-            
-            // Update recyclable value
+            const material = e.target.getAttribute('data-material') || e.target.parentElement.getAttribute('data-material');
+            if ((simulatedValues[material] || 0) <= 0) return;
+
             simulatedValues[material] -= 1;
-            
-            // Update landfill value
-            const generalLandfillElement = document.querySelector('.simulated-value[data-type="General Household Landfill"]');
-            const currentLandfill = parseFloat(generalLandfillElement.textContent);
-            const newLandfill = currentLandfill + 1;
-            generalLandfillElement.textContent = newLandfill.toFixed(2);
-            
-            // Update the row in recyclables table
+            landfillSimulated += 1;
+
             const row = e.target.closest('tr');
-            row.querySelector('td:nth-child(3)').textContent = simulatedValues[material].toFixed(2);
-            
-            // Update summary
+            row.querySelector('input.simulated-input').value = simulatedValues[material].toFixed(2);
+
+            syncLandfillCell();
             updateSummary();
-            
-            // Enable increase buttons if landfill is > 0
-            if (newLandfill > 0) {
-                document.querySelectorAll('.increase-btn').forEach(btn => {
-                    btn.disabled = false;
-                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                });
-            }
+            setButtonsAvailability();
         }
 
+        // Input change with mass-balance
+        function updateSimulatedValue(e) {
+            const material = e.target.getAttribute('data-material');
+            const oldVal = simulatedValues[material] || 0;
+            let newVal = parseFloat(e.target.value);
+            if (isNaN(newVal) || newVal < 0) newVal = 0;
+
+            const delta = newVal - oldVal;
+            if (delta > 0) {
+                if (landfillSimulated - delta < 0) {
+                    showAlert("אין מספיק פסולת להטמנה כדי להמיר לערך המבוקש.");
+                    newVal = oldVal + landfillSimulated; // מקסימום אפשרי
+                }
+                landfillSimulated -= (newVal - oldVal);
+            } else if (delta < 0) {
+                landfillSimulated += (oldVal - newVal);
+            }
+
+            simulatedValues[material] = newVal;
+            e.target.value = newVal.toFixed(2);
+
+            syncLandfillCell();
+            updateSummary();
+            setButtonsAvailability();
+        }
+
+        // Summary and cost
         function updateSummary() {
             if (!currentMunicipality) return;
-            
+
             const data = municipalities[currentMunicipality];
-            
-            // Calculate recycled waste (original and simulated)
-            const originalRecycled = Object.values(data.recyclables).reduce((sum, val) => sum + val, 0);
-            const simulatedRecycled = Object.values(simulatedValues).reduce((sum, val) => sum + val, 0);
-            
-            // Calculate non-recycled waste (original and simulated)
-            const originalNonRecycled = Object.values(data.nonRecyclables).reduce((sum, val) => sum + val, 0);
-            
-            // Get simulated non-recycled values
-            const simulatedGeneralLandfill = parseFloat(document.querySelector('.simulated-value[data-type="General Household Landfill"]').textContent);
-            const simulatedNonRecycled = simulatedGeneralLandfill + 
-                                         data.nonRecyclables["General Bulky Landfill"] + 
+
+            const originalRecycled = Object.values(data.recyclables).reduce((s, v) => s + v, 0);
+            const simulatedRecycled = Object.values(simulatedValues).reduce((s, v) => s + v, 0);
+
+            const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s, v) => s + v, 0);
+            const simulatedNonRecycled = landfillSimulated +
+                                         data.nonRecyclables["General Bulky Landfill"] +
                                          data.nonRecyclables["Prunings Sent to Landfill"];
-            
-            // Update UI
-            recycledOriginal.textContent = `Original: ${formatNumber(originalRecycled)}`;
-            recycledSimulated.textContent = `Simulated: ${formatNumber(simulatedRecycled)}`;
-            nonRecycledOriginal.textContent = `Original: ${formatNumber(originalNonRecycled)}`;
-            nonRecycledSimulated.textContent = `Simulated: ${formatNumber(simulatedNonRecycled)}`;
-            
-            // Update cost calculations if cost per ton is set
+
+            recycledOriginal.textContent = `מקור: ${formatNumber(originalRecycled)}`;
+            recycledSimulated.textContent = `סימולציה: ${formatNumber(simulatedRecycled)}`;
+            nonRecycledOriginal.textContent = `מקור: ${formatNumber(originalNonRecycled)}`;
+            nonRecycledSimulated.textContent = `סימולציה: ${formatNumber(simulatedNonRecycled)}`;
+
             updateCostCalculations();
         }
 
         function updateCostCalculations() {
             if (!currentMunicipality) return;
-            
+
             costPerTon = parseFloat(costPerTonInput.value) || 0;
-            
             const data = municipalities[currentMunicipality];
-            
-            // Get non-recycled values
-            const originalNonRecycled = Object.values(data.nonRecyclables).reduce((sum, val) => sum + val, 0);
-            const simulatedGeneralLandfill = parseFloat(document.querySelector('.simulated-value[data-type="General Household Landfill"]').textContent);
-            const simulatedNonRecycled = simulatedGeneralLandfill + 
-                                         data.nonRecyclables["General Bulky Landfill"] + 
+
+            const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s, v) => s + v, 0);
+            const simulatedNonRecycled = landfillSimulated +
+                                         data.nonRecyclables["General Bulky Landfill"] +
                                          data.nonRecyclables["Prunings Sent to Landfill"];
-            
-            // Calculate costs
+
             const originalCostValue = originalNonRecycled * costPerTon;
             const simulatedCostValue = simulatedNonRecycled * costPerTon;
             const savings = originalCostValue - simulatedCostValue;
-            
-            // Update UI
-            originalCost.textContent = `Original Cost: ₪${formatNumber(originalCostValue)}`;
-            simulatedCost.textContent = `Simulated Cost:  ₪${formatNumber(simulatedCostValue)}`;
+
+            originalCost.textContent = `עלות מקורית: ₪${formatNumber(originalCostValue)}`;
+            simulatedCost.textContent = `עלות בסימולציה: ₪${formatNumber(simulatedCostValue)}`;
             estimatedSavings.textContent = `₪${formatNumber(savings)}`;
-            
-            // Color savings based on value
+
             if (savings > 0) {
                 estimatedSavings.classList.remove('text-red-600');
                 estimatedSavings.classList.add('text-green-600');
@@ -723,46 +746,27 @@
             }
         }
 
+        // Reset
         function resetSimulation() {
             if (!currentMunicipality) return;
-            
-            // Reset simulated values to original
-            simulatedValues = {...municipalities[currentMunicipality].recyclables};
-            
-            // Reset non-recyclables display
+
+            simulatedValues = { ...municipalities[currentMunicipality].recyclables };
+            landfillSimulated = municipalities[currentMunicipality].nonRecyclables["General Household Landfill"];
+
             document.querySelectorAll('.simulated-value').forEach(el => {
                 const type = el.getAttribute('data-type');
-                el.textContent = municipalities[currentMunicipality].nonRecyclables[type].toFixed(2);
+                const base = municipalities[currentMunicipality].nonRecyclables[type];
+                el.textContent = (type === "General Household Landfill" ? landfillSimulated : base).toFixed(2);
             });
-            
-            // Reset recyclables table display
+
             document.querySelectorAll('#recyclablesTable tr').forEach((row, index) => {
                 const material = Object.keys(municipalities[currentMunicipality].recyclables)[index];
-                row.querySelector('td:nth-child(3)').textContent = simulatedValues[material].toFixed(2);
+                const input = row.querySelector('input.simulated-input');
+                if (input) input.value = simulatedValues[material].toFixed(2);
             });
-            
-            // Enable all increase buttons
-            document.querySelectorAll('.increase-btn').forEach(btn => {
-                btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-            });
-            
-            // Update summary
+
+            setButtonsAvailability();
             updateSummary();
-        }
-
-        function showAlert(message) {
-            alertMessage.textContent = message;
-            alertBox.classList.remove('hidden');
-            alertBox.classList.add('show');
-            
-            // Auto-hide after 5 seconds
-            setTimeout(hideAlert, 5000);
-        }
-
-        function hideAlert() {
-            alertBox.classList.remove('show');
-            alertBox.classList.add('hidden');
         }
     </script>
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=kevincivix/muniwaste" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
