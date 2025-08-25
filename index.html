@@ -1,784 +1,399 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>סימולטור ניהול פסולת</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .alert-box { opacity: 0; transition: opacity 0.3s ease-in-out; }
-        .alert-box.show { opacity: 1; }
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type="number"] { -moz-appearance: textfield; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>סימולטור ניהול פסולת</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    .alert-box{opacity:0;transition:opacity .3s ease-in-out}
+    .alert-box.show{opacity:1}
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+    input[type="number"]{-moz-appearance:textfield}
+  </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
+  <div class="container mx-auto px-4 py-8">
 
-        <!-- Header with logos -->
-        <div class="flex items-center justify-center gap-60 mb-4">
-            <img src="https://i.postimg.cc/fRh195Zp/Civix-Logo-01.png" alt="לוגו צוותי חדשנות נגב מזרחי" class="h-16">
-            <img src="https://i.postimg.cc/FFd6CwHw/Asset-3-2x.png" alt="לוגו Civix" class="h-16">
-        </div>
-
-        <h1 class="text-3xl font-bold text-center text-black mb-8">סימולטור ניהול פסולת</h1>
-
-        <!-- Dropdown and Cost Input -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div>
-                <label for="municipality" class="block text-sm font-medium text-gray-700 mb-1">בחר/י רשות מקומית</label>
-                <select id="municipality" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
-                    <option value="">בחר/י רשות</option>
-                    <option value="Kuseife">כסייפה</option>
-                    <option value="Yeruham">ירוחם</option>
-                    <option value="Mitzpe Ramon">מצפה רמון</option>
-                    <option value="Central Arava">ערבה תיכונה</option>
-                    <option value="Dimona">דימונה</option>
-                    <option value="Hura">חורה</option>
-                    <option value="Arad">ערד</option>
-                    <option value="Al-Kasom">אל קסום</option>
-                    <option value="Segev Shalom">שגב שלום</option>
-                    <option value="Neve Midbar">נווה מדבר</option>
-                    <option value="Tel Sheva">תל שבע</option>
-                    <option value="Ramat Negev">רמת נגב</option>
-                </select>
-            </div>
-            <div>
-                <label for="costPerTon" class="block text-sm font-medium text-gray-700 mb-1">עלות להטמנת טון פסולת (₪)</label>
-                <input type="number" id="costPerTon" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" placeholder="הקלד/י עלות לטון">
-            </div>
-        </div>
-
-        <!-- Alert Box -->
-        <div id="alertBox" class="alert-box fixed top-4 left-4 max-w-md bg-red-100 border-r-4 border-red-500 text-red-700 p-4 rounded shadow-lg hidden">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-exclamation-circle text-red-500"></i>
-                </div>
-                <div class="mr-3">
-                    <p id="alertMessage" class="text-sm">לא ניתן להגדיל מיחזור – אין עוד פסולת להטמנה שאפשר להמיר.</p>
-                </div>
-                <div class="ml-auto pr-3">
-                    <button id="closeAlert" class="text-red-500 hover:text-red-700">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tables Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <!-- Recyclables Table -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-semibold text-green-700 mb-4">חומרים למיחזור</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">חומר</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">מקור (טון)</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סימולציה (טון)</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">פעולות</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recyclablesTable" class="bg-white divide-y divide-gray-200">
-                            <!-- populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Non-Recyclables Table -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-semibold text-green-700 mb-4">פסולת לא ממוחזרת</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סוג</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">מקור (טון)</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סימולציה (טון)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="nonRecyclablesTable" class="bg-white divide-y divide-gray-200">
-                            <!-- populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Summary Panel -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 class="text-xl font-semibold text-green-700 mb-4">סיכום</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-sm font-medium text-gray-500">סה״כ פסולת (מקור)</h3>
-                    <p id="totalWasteOriginal" class="text-2xl font-bold text-gray-800">0</p>
-                    <p class="text-sm text-gray-500">טון</p>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-sm font-medium text-gray-500">פסולת ממוחזרת</h3>
-                    <p id="recycledOriginal" class="text-lg text-gray-600">מקור: 0</p>
-                    <p id="recycledSimulated" class="text-lg text-green-600 font-bold">סימולציה: 0</p>
-                    <p class="text-sm text-gray-500">טון</p>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-sm font-medium text-gray-500">פסולת לא ממוחזרת</h3>
-                    <p id="nonRecycledOriginal" class="text-lg text-gray-600">מקור: 0</p>
-                    <p id="nonRecycledSimulated" class="text-lg text-green-600 font-bold">סימולציה: 0</p>
-                    <p class="text-sm text-gray-500">טון</p>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-sm font-medium text-gray-500">חיסכון מוערך</h3>
-                    <p id="originalCost" class="text-sm text-gray-600">עלות מקורית: ₪0</p>
-                    <p id="simulatedCost" class="text-sm text-gray-600">עלות בסימולציה: ₪0</p>
-                    <p id="estimatedSavings" class="text-xl font-bold text-green-600">₪0</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Reset Button -->
-        <div class="flex justify-center">
-            <button id="resetButton" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
-                <i class="fas fa-redo ml-2"></i>איפוס סימולציה
-            </button>
-        </div>
+    <!-- Header with logos -->
+    <div class="flex items-center justify-center gap-60 mb-4">
+      <img src="https://i.postimg.cc/fRh195Zp/Civix-Logo-01.png" alt="לוגו צוותי חדשנות נגב מזרחי" class="h-16">
+      <img src="https://i.postimg.cc/FFd6CwHw/Asset-3-2x.png" alt="לוגו Civix" class="h-16">
     </div>
 
-    <script>
-        // Dataset (unchanged keys)
-        const municipalities = {
-            "Kuseife": {
-                recyclables: {
-                    "Paper": 0,
-                    "Cardboard": 80.7,
-                    "Plastic": 0,
-                    "Glass": 0,
-                    "Electronic Waste": 3.8,
-                    "Batteries and Accumulators": 0,
-                    "Orange Bin (Plastic Packaging)": 0,
-                    "Textiles": 0,
-                    "Oil": 0,
-                    "Metal and Iron": 0,
-                    "Home compost / Brown Bin / Organic Waste": 0,
-                    "Tires": 0,
-                    "Nylon (Non-Agricultural)": 0,
-                    "Bulky Waste": 0,
-                    "Prunings": 0,
-                    "Other": 0,
-                    "Refuse-Derived Fuel (RDF)": 0
-                },
-                nonRecyclables: {
-                    "General Household Landfill": 4618.922,
-                    "General Bulky Landfill": 2.688,
-                    "Prunings Sent to Landfill": 0
-                },
-                totalWaste: 4706.11
-            },
-            "Yeruham": {
-                recyclables: {
-                    "Paper": 16.36,
-                    "Cardboard": 187.78,
-                    "Plastic": 0,
-                    "Glass": 5.45,
-                    "Electronic Waste": 8.41,
-                    "Batteries and Accumulators": 0,
-                    "Orange Bin (Plastic Packaging)": 21.36,
-                    "Textiles": 0,
-                    "Oil": 0,
-                    "Metal and Iron": 0,
-                    "Home compost / Brown Bin / Organic Waste": 0,
-                    "Tires": 0,
-                    "Nylon (Non-Agricultural)": 0,
-                    "Bulky Waste": 0,
-                    "Prunings": 0,
-                    "Other": 0,
-                    "Refuse-Derived Fuel (RDF)": 0
-                },
-                nonRecyclables: {
-                    "General Household Landfill": 4728.23,
-                    "General Bulky Landfill": 707,
-                    "Prunings Sent to Landfill": 0
-                },
-                totalWaste: 5674.59
-            },
-            "Mitzpe Ramon": {
-                recyclables: {
-                    "Paper": 6,
-                    "Cardboard": 100.77,
-                    "Plastic": 0,
-                    "Glass": 2,
-                    "Electronic Waste": 0,
-                    "Batteries and Accumulators": 0,
-                    "Orange Bin (Plastic Packaging)": 20.74,
-                    "Textiles": 0,
-                    "Oil": 20,
-                    "Metal and Iron": 0,
-                    "Home compost / Brown Bin / Organic Waste": 0,
-                    "Tires": 0,
-                    "Nylon (Non-Agricultural)": 0,
-                    "Bulky Waste": 0,
-                    "Prunings": 0,
-                    "Other": 0,
-                    "Refuse-Derived Fuel (RDF)": 0
-                },
-                nonRecyclables: {
-                    "General Household Landfill": 3600.65,
-                    "General Bulky Landfill": 243,
-                    "Prunings Sent to Landfill": 0
-                },
-                totalWaste: 3993.16
-            },
-            "Central Arava": {
-                recyclables: {
-                    "Paper": 40.37,
-                    "Cardboard": 70.76,
-                    "Plastic": 5.9,
-                    "Glass": 4.5,
-                    "Electronic Waste": 0,
-                    "Batteries and Accumulators": 0,
-                    "Orange Bin (Plastic Packaging)": 0,
-                    "Textiles": 0,
-                    "Oil": 0,
-                    "Metal and Iron": 0,
-                    "Home compost / Brown Bin / Organic Waste": 0,
-                    "Tires": 0,
-                    "Nylon (Non-Agricultural)": 0,
-                    "Bulky Waste": 0,
-                    "Prunings": 0,
-                    "Other": 0,
-                    "Refuse-Derived Fuel (RDF)": 0
-                },
-                nonRecyclables: {
-                    "General Household Landfill": 3085,
-                    "General Bulky Landfill": 0,
-                    "Prunings Sent to Landfill": 0
-                },
-                totalWaste: 3206.53
-            },
-            "Dimona": {
-                recyclables: {
-                    "Paper": 12.19,
-                    "Cardboard": 345.23,
-                    "Plastic": 6.6,
-                    "Glass": 11.5,
-                    "Electronic Waste": 3,
-                    "Batteries and Accumulators": 0,
-                    "Orange Bin (Plastic Packaging)": 29.18,
-                    "Textiles": 0,
-                    "Oil": 33.39,
-                    "Metal and Iron": 3,
-                    "Home compost / Brown Bin / Organic Waste": 0,
-                    "Tires": 0,
-                    "Nylon (Non-Agricultural)": 0,
-                    "Bulky Waste": 0,
-                    "Prunings": 0,
-                    "Other": 0,
-                    "Refuse-Derived Fuel (RDF)": 0
-                },
-                nonRecyclables: {
-                    "General Household Landfill": 18917.71,
-                    "General Bulky Landfill": 0,
-                    "Prunings Sent to Landfill": 1318.42
-                },
-                totalWaste: 20680.22
-            },
-            "Hura": {
-                recyclables: {
-                    "Paper": 0,
-                    "Cardboard": 57.7,
-                    "Plastic": 0,
-                    "Glass": 0,
-                    "Electronic Waste": 0,
-                    "Batteries and Accumulators": 0,
-                    "Orange Bin (Plastic Packaging)": 0,
-                    "Textiles": 0,
-                    "Oil": 0,
-                    "Metal and Iron": 0,
-                    "Home compost / Brown Bin / Organic Waste": 0,
-                    "Tires": 0,
-                    "Nylon (Non-Agricultural)": 0,
-                    "Bulky Waste": 0,
-                    "Prunings": 0,
-                    "Other": 0,
-                    "Refuse-Derived Fuel (RDF)": 0
-                },
-                nonRecyclables: {
-                    "General Household Landfill": 8220.6,
-                    "General Bulky Landfill": 1544.7,
-                    "Prunings Sent to Landfill": 0
-                },
-                totalWaste: 9823
-            },
-            "Arad": {
-                recyclables: {
-                    "Paper": 75.118,
-                    "Cardboard": 435.158,
-                    "Plastic": 0,
-                    "Glass": 11.7,
-                    "Electronic Waste": 1.304,
-                    "Batteries and Accumulators": 0,
-                    "Orange Bin (Plastic Packaging)": 162.48,
-                    "Textiles": 25.91,
-                    "Oil": 0,
-                    "Metal and Iron": 0,
-                    "Home compost / Brown Bin / Organic Waste": 0,
-                    "Tires": 0,
-                    "Nylon (Non-Agricultural)": 0,
-                    "Bulky Waste": 1568.92,
-                    "Prunings": 0,
-                    "Other": 0,
-                    "Refuse-Derived Fuel (RDF)": 0
-                },
-                nonRecyclables: {
-                    "General Household Landfill": 11822.88,
-                    "General Bulky Landfill": 0
-                },
-                totalWaste: 14103.47
-            },
-            "Al-Kasom": {
-                recyclables: {
-                    "Paper": 0,
-                    "Cardboard": 19.23,
-                    "Plastic": 0,
-                    "Glass": 0,
-                    "Electronic Waste": 0,
-                    "Batteries and Accumulators": 0,
-                    "Orange Bin (Plastic Packaging)": 0,
-                    "Textiles": 0,
-                    "Oil": 0,
-                    "Metal and Iron": 0,
-                    "Home compost / Brown Bin / Organic Waste": 0,
-                    "Tires": 12.95,
-                    "Nylon (Non-Agricultural)": 0,
-                    "Bulky Waste": 0,
-                    "Prunings": 0,
-                    "Other": 0,
-                    "Refuse-Derived Fuel (RDF)": 0
-                },
-                nonRecyclables: {
-                    "General Household Landfill": 6089.16,
-                    "General Bulky Landfill": 0
-                },
-                totalWaste: 6121.34
-            },
-            "Segev Shalom": {
-                recyclables: {
-                    "Paper": 139.65,
-                    "Cardboard": 2.48,
-                    "Plastic": 4.13,
-                    "Glass": 0,
-                    "Electronic Waste": 0,
-                    "Batteries and Accumulators": 0,
-                    "Orange Bin (Plastic Packaging)": 0,
-                    "Textiles": 0,
-                    "Oil": 0,
-                    "Metal and Iron": 1.65,
-                    "Home compost / Brown Bin / Organic Waste": 0,
-                    "Tires": 0,
-                    "Nylon (Non-Agricultural)": 0,
-                    "Bulky Waste": 0,
-                    "Prunings": 0,
-                    "Other": 0,
-                    "Refuse-Derived Fuel (RDF)": 0
-                },
-                nonRecyclables: {
-                    "General Household Landfill": 7214.45,
-                    "General Bulky Landfill": 0
-                },
-                totalWaste: 7362.36
-            },
-            "Neve Midbar": {
-                recyclables: {
-                    "Paper": 0,
-                    "Cardboard": 0,
-                    "Plastic": 0,
-                    "Glass": 0,
-                    "Electronic Waste": 0,
-                    "Batteries and Accumulators": 0,
-                    "Orange Bin (Plastic Packaging)": 0,
-                    "Textiles": 0,
-                    "Oil": 0,
-                    "Metal and Iron": 0,
-                    "Home compost / Brown Bin / Organic Waste": 0,
-                    "Tires": 0,
-                    "Nylon (Non-Agricultural)": 0,
-                    "Bulky Waste": 0,
-                    "Prunings": 0,
-                    "Other": 0,
-                    "Refuse-Derived Fuel (RDF)": 0
-                },
-                nonRecyclables: {
-                    "General Household Landfill": 2000,
-                    "General Bulky Landfill": 0
-                },
-                totalWaste: 2000
-            },
-            "Tel Sheva": {
-                recyclables: {
-                    "Paper": 0,
-                    "Cardboard": 0,
-                    "Plastic": 0,
-                    "Glass": 0,
-                    "Electronic Waste": 0,
-                    "Batteries and Accumulators": 0,
-                    "Orange Bin (Plastic Packaging)": 0,
-                    "Textiles": 0,
-                    "Oil": 0,
-                    "Metal and Iron": 0,
-                    "Home compost / Brown Bin / Organic Waste": 0,
-                    "Tires": 0,
-                    "Nylon (Non-Agricultural)": 0,
-                    "Bulky Waste": 0,
-                    "Prunings": 0,
-                    "Other": 0,
-                    "Refuse-Derived Fuel (RDF)": 0
-                },
-                nonRecyclables: {
-                    "General Household Landfill": 7122.22,
-                    "General Bulky Landfill": 2838.76
-                },
-                totalWaste: 9960.98
-            },
-            "Ramat Negev": {
-                recyclables: {
-                    "Paper": 40.75,
-                    "Cardboard": 281.07,
-                    "Plastic": 2.7,
-                    "Glass": 26.5,
-                    "Electronic Waste": 4,
-                    "Batteries and Accumulators": 0.7,
-                    "Orange Bin (Plastic Packaging)": 79.88,
-                    "Textiles": 5,
-                    "Oil": 0,
-                    "Metal and Iron": 90,
-                    "Home compost / Brown Bin / Organic Waste": 0,
-                    "Tires": 0,
-                    "Nylon (Non-Agricultural)": 0,
-                    "Bulky Waste": 230.4,
-                    "Prunings": 0,
-                    "Other": 0,
-                    "Refuse-Derived Fuel (RDF)": 0
-                },
-                nonRecyclables: {
-                    "General Household Landfill": 9518.6,
-                    "General Bulky Landfill": 525.52
-                },
-                totalWaste: 10805.12
-            }
-        };
+    <h1 class="text-3xl font-bold text-center text-black mb-8">סימולטור ניהול פסולת - רשויות נגב מזרחי</h1>
 
-        // Hebrew label maps (display only)
-        const labelsRecyclables = {
-            "Paper": "נייר",
-            "Cardboard": "קרטון",
-            "Plastic": "פלסטיק",
-            "Glass": "זכוכית",
-            "Electronic Waste": "פסולת אלקטרונית",
-            "Batteries and Accumulators": "סוללות ומצברים",
-            "Orange Bin (Plastic Packaging)": "פח כתום (אריזות)",
-            "Textiles": "טקסטיל",
-            "Oil": "שמנים",
-            "Metal and Iron": "מתכות וברזל",
-            "Home compost / Brown Bin / Organic Waste": "קומפוסט ביתי / פח חום / אורגני",
-            "Tires": "צמיגים",
-            "Nylon (Non-Agricultural)": "ניילון (לא חקלאי)",
-            "Bulky Waste": "פסולת גושית ממוחזרת",
-            "Prunings": "גזם ממוחזר",
-            "Other": "אחר",
-            "Refuse-Derived Fuel (RDF)": "דלק מפסולת (RDF)"
-        };
+    <!-- Controls -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div>
+        <label for="municipality" class="block text-sm font-medium text-gray-700 mb-1">בחר/י רשות מקומית</label>
+        <select id="municipality" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+          <option value="">בחר/י רשות</option>
+          <option value="Kuseife">כסייפה</option>
+          <option value="Yeruham">ירוחם</option>
+          <option value="Mitzpe Ramon">מצפה רמון</option>
+          <option value="Central Arava">ערבה תיכונה</option>
+          <option value="Dimona">דימונה</option>
+          <option value="Hura">חורה</option>
+          <option value="Arad">ערד</option>
+          <option value="Al-Kasom">אל קסום</option>
+          <option value="Segev Shalom">שגב שלום</option>
+          <option value="Neve Midbar">נווה מדבר</option>
+          <option value="Tel Sheva">תל שבע</option>
+          <option value="Ramat Negev">רמת נגב</option>
+        </select>
+      </div>
+      <div>
+        <label for="costPerTon" class="block text-sm font-medium text-gray-700 mb-1">עלות להטמנת טון פסולת (₪)</label>
+        <input type="number" id="costPerTon" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" placeholder="הקלד/י עלות לטון">
+      </div>
+    </div>
 
-        const labelsNonRecyclables = {
-            "General Household Landfill": "אשפה ביתית להטמנה",
-            "General Bulky Landfill": "פסולת גושית להטמנה",
-            "Prunings Sent to Landfill": "גזם להטמנה"
-        };
+    <!-- Alert -->
+    <div id="alertBox" class="alert-box fixed top-4 left-4 max-w-md bg-red-100 border-r-4 border-red-500 text-red-700 p-4 rounded shadow-lg hidden">
+      <div class="flex items-center">
+        <div class="flex-shrink-0"><i class="fas fa-exclamation-circle text-red-500"></i></div>
+        <div class="mr-3">
+          <p id="alertMessage" class="text-sm">לא ניתן להגדיל מיחזור – אין עוד פסולת להטמנה שאפשר להמיר.</p>
+        </div>
+        <div class="ml-auto pr-3">
+          <button id="closeAlert" class="text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+    </div>
 
-        // Savings factors per recyclable material (Paper/Cardboard = 10%, others = 100%)
-        const savingsFactor = {
-            "Paper": 0.10,
-            "Cardboard": 0.10,
-            "default": 1.00
-        };
+    <!-- Tables -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- Recyclables -->
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-semibold text-green-700 mb-4">
+         פסולת מופרדת במקור
+          <span class="text-xs text-gray-500"></span>
+        </h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">חומר</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">מקור (טון)</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סימולציה (טון)</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">פעולות</th>
+              </tr>
+            </thead>
+            <tbody id="recyclablesTable" class="bg-white divide-y divide-gray-200"></tbody>
+          </table>
+        </div>
+      </div>
 
-        // State
-        let currentMunicipality = null;
-        let simulatedValues = {};
-        let originalNonRecyclables = {};
-        let costPerTon = 0;
-        let landfillSimulated = 0; // מצב ההטמנה בסימולציה
+      <!-- Non-Recyclables -->
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-semibold text-green-700 mb-4">פסולת לא ממוחזרת</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סוג</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">מקור (טון)</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סימולציה (טון)</th>
+              </tr>
+            </thead>
+            <tbody id="nonRecyclablesTable" class="bg-white divide-y divide-gray-200"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-        // DOM Elements
-        const municipalitySelect = document.getElementById('municipality');
-        const costPerTonInput = document.getElementById('costPerTon');
-        const recyclablesTable = document.getElementById('recyclablesTable');
-        const nonRecyclablesTable = document.getElementById('nonRecyclablesTable');
-        const totalWasteOriginal = document.getElementById('totalWasteOriginal');
-        const recycledOriginal = document.getElementById('recycledOriginal');
-        const recycledSimulated = document.getElementById('recycledSimulated');
-        const nonRecycledOriginal = document.getElementById('nonRecycledOriginal');
-        const nonRecycledSimulated = document.getElementById('nonRecycledSimulated');
-        const originalCost = document.getElementById('originalCost');
-        const simulatedCost = document.getElementById('simulatedCost');
-        const estimatedSavings = document.getElementById('estimatedSavings');
-        const resetButton = document.getElementById('resetButton');
-        const alertBox = document.getElementById('alertBox');
-        const alertMessage = document.getElementById('alertMessage');
-        const closeAlert = document.getElementById('closeAlert');
+    <!-- Summary -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+      <h2 class="text-xl font-semibold text-green-700 mb-4">סיכום</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="text-sm font-medium text-gray-500">סה״כ פסולת (מקור)</h3>
+          <p id="totalWasteOriginal" class="text-2xl font-bold text-gray-800">0</p>
+          <p class="text-sm text-gray-500">טון</p>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="text-sm font-medium text-gray-500">פסולת ממוחזרת</h3>
+          <p id="recycledOriginal" class="text-lg text-gray-600">מקור: 0</p>
+          <p id="recycledSimulated" class="text-lg text-green-600 font-bold">סימולציה: 0</p>
+          <p class="text-sm text-gray-500">טון</p>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="text-sm font-medium text-gray-500">פסולת לא ממוחזרת</h3>
+          <p id="nonRecycledOriginal" class="text-lg text-gray-600">מקור: 0</p>
+          <p id="nonRecycledSimulated" class="text-lg text-green-600 font-bold">סימולציה: 0</p>
+          <p class="text-sm text-gray-500">טון</p>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="text-sm font-medium text-gray-500">חיסכון מוערך</h3>
+          <p id="originalCost" class="text-sm text-gray-600">עלות מקורית: ₪0</p>
+          <p id="simulatedCost" class="text-sm text-gray-600">עלות בסימולציה: ₪0</p>
+          <p id="estimatedSavings" class="text-xl font-bold text-green-600">₪0</p>
+        </div>
+      </div>
+    </div>
 
-        // Events
-        municipalitySelect.addEventListener('change', loadMunicipalityData);
-        costPerTonInput.addEventListener('input', updateCostCalculations);
-        resetButton.addEventListener('click', resetSimulation);
-        closeAlert.addEventListener('click', hideAlert);
+    <!-- Reset -->
+    <div class="flex justify-center">
+      <button id="resetButton" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+        <i class="fas fa-redo ml-2"></i>איפוס סימולציה
+      </button>
+    </div>
+  </div>
 
-        // Helpers
-        function formatNumber(num) {
-            return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  <script>
+    // --- Data ---
+    const municipalities = {
+      "Kuseife": { recyclables: { "Paper":0,"Cardboard":80.7,"Plastic":0,"Glass":0,"Electronic Waste":3.8,"Batteries and Accumulators":0,"Orange Bin (Plastic Packaging)":0,"Textiles":0,"Oil":0,"Metal and Iron":0,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":0,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":4618.922,"General Bulky Landfill":2.688,"Prunings Sent to Landfill":0 }, totalWaste:4706.11 },
+      "Yeruham": { recyclables: { "Paper":16.36,"Cardboard":187.78,"Plastic":0,"Glass":5.45,"Electronic Waste":8.41,"Batteries and Accumulators":0,"Orange Bin (Plastic Packaging)":21.36,"Textiles":0,"Oil":0,"Metal and Iron":0,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":0,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":4728.23,"General Bulky Landfill":707,"Prunings Sent to Landfill":0 }, totalWaste:5674.59 },
+      "Mitzpe Ramon": { recyclables: { "Paper":6,"Cardboard":100.77,"Plastic":0,"Glass":2,"Electronic Waste":0,"Batteries and Accumulators":0,"Orange Bin (Plastic Packaging)":20.74,"Textiles":0,"Oil":20,"Metal and Iron":0,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":0,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":3600.65,"General Bulky Landfill":243,"Prunings Sent to Landfill":0 }, totalWaste:3993.16 },
+      "Central Arava": { recyclables: { "Paper":40.37,"Cardboard":70.76,"Plastic":5.9,"Glass":4.5,"Electronic Waste":0,"Batteries and Accumulators":0,"Orange Bin (Plastic Packaging)":0,"Textiles":0,"Oil":0,"Metal and Iron":0,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":0,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":3085,"General Bulky Landfill":0,"Prunings Sent to Landfill":0 }, totalWaste:3206.53 },
+      "Dimona": { recyclables: { "Paper":12.19,"Cardboard":345.23,"Plastic":6.6,"Glass":11.5,"Electronic Waste":3,"Batteries and Accumulators":0,"Orange Bin (Plastic Packaging)":29.18,"Textiles":0,"Oil":33.39,"Metal and Iron":3,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":0,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":18917.71,"General Bulky Landfill":0,"Prunings Sent to Landfill":1318.42 }, totalWaste:20680.22 },
+      "Hura": { recyclables: { "Paper":0,"Cardboard":57.7,"Plastic":0,"Glass":0,"Electronic Waste":0,"Batteries and Accumulators":0,"Orange Bin (Plastic Packaging)":0,"Textiles":0,"Oil":0,"Metal and Iron":0,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":0,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":8220.6,"General Bulky Landfill":1544.7,"Prunings Sent to Landfill":0 }, totalWaste:9823 },
+      "Arad": { recyclables: { "Paper":75.118,"Cardboard":435.158,"Plastic":0,"Glass":11.7,"Electronic Waste":1.304,"Batteries and Accumulators":0,"Orange Bin (Plastic Packaging)":162.48,"Textiles":25.91,"Oil":0,"Metal and Iron":0,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":1568.92,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":11822.88,"General Bulky Landfill":0,"Prunings Sent to Landfill":0 }, totalWaste:14103.47 },
+      "Al-Kasom": { recyclables: { "Paper":0,"Cardboard":19.23,"Plastic":0,"Glass":0,"Electronic Waste":0,"Batteries and Accumulators":0,"Orange Bin (Plastic Packaging)":0,"Textiles":0,"Oil":0,"Metal and Iron":0,"Home compost / Brown Bin / Organic Waste":0,"Tires":12.95,"Nylon (Non-Agricultural)":0,"Bulky Waste":0,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":6089.16,"General Bulky Landfill":0,"Prunings Sent to Landfill":0 }, totalWaste:6121.34 },
+      "Segev Shalom": { recyclables: { "Paper":139.65,"Cardboard":2.48,"Plastic":4.13,"Glass":0,"Electronic Waste":0,"Batteries and Accumulators":0,"Orange Bin (Plastic Packaging)":0,"Textiles":0,"Oil":0,"Metal and Iron":1.65,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":0,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":7214.45,"General Bulky Landfill":0,"Prunings Sent to Landfill":0 }, totalWaste:7362.36 },
+      "Neve Midbar": { recyclables: { "Paper":0,"Cardboard":0,"Plastic":0,"Glass":0,"Electronic Waste":0,"Batteries and Accumulators":0,"Orange Bin (Plastic Packaging)":0,"Textiles":0,"Oil":0,"Metal and Iron":0,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":0,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":2000,"General Bulky Landfill":0,"Prunings Sent to Landfill":0 }, totalWaste:2000 },
+      "Tel Sheva": { recyclables: { "Paper":0,"Cardboard":0,"Plastic":0,"Glass":0,"Electronic Waste":0,"Batteries and Accumulators":0,"Orange Bin (Plastic Packaging)":0,"Textiles":0,"Oil":0,"Metal and Iron":0,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":0,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":7122.22,"General Bulky Landfill":2838.76,"Prunings Sent to Landfill":0 }, totalWaste:9960.98 },
+      "Ramat Negev": { recyclables: { "Paper":40.75,"Cardboard":281.07,"Plastic":2.7,"Glass":26.5,"Electronic Waste":4,"Batteries and Accumulators":0.7,"Orange Bin (Plastic Packaging)":79.88,"Textiles":5,"Oil":0,"Metal and Iron":90,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":230.4,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":9518.6,"General Bulky Landfill":525.52,"Prunings Sent to Landfill":0 }, totalWaste:10805.12 }
+    };
+
+    // Labels (display)
+    const labelsRecyclables = {
+      "Paper":"נייר","Cardboard":"קרטון","Plastic":"פלסטיק","Glass":"זכוכית","Electronic Waste":"פסולת אלקטרונית",
+      "Batteries and Accumulators":"סוללות ומצברים","Orange Bin (Plastic Packaging)":"פח כתום (אריזות)","Textiles":"טקסטיל",
+      "Oil":"שמנים","Metal and Iron":"מתכות וברזל","Home compost / Brown Bin / Organic Waste":"קומפוסט ביתי / פח חום / אורגני",
+      "Tires":"צמיגים","Nylon (Non-Agricultural)":"ניילון (לא חקלאי)","Bulky Waste":"פסולת גושית ממוחזרת","Prunings":"גזם ממוחזר",
+      "Other":"אחר","Refuse-Derived Fuel (RDF)":"דלק מפסולת (RDF)"
+    };
+    const labelsNonRecyclables = {
+      "General Household Landfill":"אשפה ביתית להטמנה",
+      "General Bulky Landfill":"פסולת גושית להטמנה",
+      "Prunings Sent to Landfill":"גזם להטמנה"
+    };
+
+    // Savings factors
+    const savingsFactor = { "Paper":0.10, "Cardboard":0.10, "default":1.00 };
+
+    // --- State ---
+    let currentMunicipality = null;
+    let simulatedValues = {};
+    let originalNonRecyclables = {};
+    let costPerTon = 0;
+    let landfillSimulated = 0; // מצב ההטמנה בסימולציה
+
+    // --- DOM ---
+    const municipalitySelect = document.getElementById('municipality');
+    const costPerTonInput = document.getElementById('costPerTon');
+    const recyclablesTable = document.getElementById('recyclablesTable');
+    const nonRecyclablesTable = document.getElementById('nonRecyclablesTable');
+    const totalWasteOriginal = document.getElementById('totalWasteOriginal');
+    const recycledOriginal = document.getElementById('recycledOriginal');
+    const recycledSimulated = document.getElementById('recycledSimulated');
+    const nonRecycledOriginal = document.getElementById('nonRecycledOriginal');
+    const nonRecycledSimulated = document.getElementById('nonRecycledSimulated');
+    const originalCost = document.getElementById('originalCost');
+    const simulatedCost = document.getElementById('simulatedCost');
+    const estimatedSavings = document.getElementById('estimatedSavings');
+    const resetButton = document.getElementById('resetButton');
+    const alertBox = document.getElementById('alertBox');
+    const alertMessage = document.getElementById('alertMessage');
+    const closeAlert = document.getElementById('closeAlert');
+
+    // --- Events ---
+    municipalitySelect.addEventListener('change', loadMunicipalityData);
+    costPerTonInput.addEventListener('input', updateCostCalculations);
+    resetButton.addEventListener('click', resetSimulation);
+    closeAlert.addEventListener('click', hideAlert);
+
+    // --- Helpers ---
+    function formatNumber(n){return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+    function showAlert(msg){alertMessage.textContent=msg;alertBox.classList.remove('hidden');alertBox.classList.add('show');setTimeout(hideAlert,5000)}
+    function hideAlert(){alertBox.classList.remove('show');alertBox.classList.add('hidden')}
+    function syncLandfillCell(){const c=document.querySelector('.simulated-value[data-type="General Household Landfill"]'); if(c) c.textContent=landfillSimulated.toFixed(2)}
+    function setButtonsAvailability(){const dis=landfillSimulated<=0.000001; document.querySelectorAll('.increase-btn').forEach(b=>{b.disabled=dis;b.classList.toggle('opacity-50',dis);b.classList.toggle('cursor-not-allowed',dis);})}
+
+    // --- Load & Build Tables ---
+    function loadMunicipalityData(){
+      const key = municipalitySelect.value;
+      if(!key) return;
+
+      currentMunicipality = key;
+      const data = municipalities[key];
+
+      simulatedValues = {...data.recyclables};
+      originalNonRecyclables = {...data.nonRecyclables};
+      landfillSimulated = originalNonRecyclables["General Household Landfill"];
+
+      // Recyclables table (with tooltip for Paper/Cardboard)
+      recyclablesTable.innerHTML = '';
+      Object.entries(data.recyclables).forEach(([material, value])=>{
+        const isSpecial = (material==="Paper" || material==="Cardboard");
+        const label = labelsRecyclables[material] || material;
+
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 relative group">
+            ${label}${isSpecial ? `<span class="ml-1 text-red-500">*</span>
+              <div class="absolute right-full top-1/2 -translate-y-1/2 mr-2 w-56 bg-black text-white text-xs rounded py-1 px-2 hidden group-hover:block z-10">
+                נייר וקרטון מזכים ב־10% חיסכון בלבד לטון
+              </div>` : ``}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatNumber(value)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">
+            <input type="number" class="w-24 px-2 py-1 border border-gray-300 rounded simulated-input" data-material="${material}" value="${value.toFixed(2)}">
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <div class="flex items-center space-x-2 space-x-reverse">
+              <button class="decrease-btn px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200" data-material="${material}">
+                <i class="fas fa-minus"></i>
+              </button>
+              <button class="increase-btn px-2 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200" data-material="${material}">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+          </td>`;
+        recyclablesTable.appendChild(row);
+      });
+
+      // Attach listeners
+      document.querySelectorAll('.simulated-input').forEach(inp=>inp.addEventListener('change', updateSimulatedValue));
+      document.querySelectorAll('.increase-btn').forEach(b=>b.addEventListener('click', increaseRecyclable));
+      document.querySelectorAll('.decrease-btn').forEach(b=>b.addEventListener('click', decreaseRecyclable));
+
+      // Non-recyclables table
+      nonRecyclablesTable.innerHTML = '';
+      Object.entries(data.nonRecyclables).forEach(([type,val])=>{
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        const simVal = (type==="General Household Landfill" ? landfillSimulated : val);
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${labelsNonRecyclables[type] || type}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${val.toFixed(2)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold simulated-value" data-type="${type}">${simVal.toFixed(2)}</td>`;
+        nonRecyclablesTable.appendChild(row);
+      });
+
+      totalWasteOriginal.textContent = data.totalWaste.toFixed(2);
+      setButtonsAvailability();
+      updateSummary();
+    }
+
+    // --- Handlers with Mass Balance ---
+    function increaseRecyclable(e){
+      const material = e.target.getAttribute('data-material') || e.target.parentElement.getAttribute('data-material');
+      if(landfillSimulated<=0){showAlert("לא נותרה פסולת להטמנה שניתן להמיר למיחזור."); return;}
+      simulatedValues[material] = (simulatedValues[material]||0)+1;
+      landfillSimulated -= 1;
+      const row = e.target.closest('tr');
+      row.querySelector('input.simulated-input').value = simulatedValues[material].toFixed(2);
+      syncLandfillCell(); updateSummary(); setButtonsAvailability();
+    }
+
+    function decreaseRecyclable(e){
+      const material = e.target.getAttribute('data-material') || e.target.parentElement.getAttribute('data-material');
+      if((simulatedValues[material]||0)<=0) return;
+      simulatedValues[material] -= 1;
+      landfillSimulated += 1;
+      const row = e.target.closest('tr');
+      row.querySelector('input.simulated-input').value = simulatedValues[material].toFixed(2);
+      syncLandfillCell(); updateSummary(); setButtonsAvailability();
+    }
+
+    function updateSimulatedValue(e){
+      const material = e.target.getAttribute('data-material');
+      const oldVal = simulatedValues[material]||0;
+      let newVal = parseFloat(e.target.value); if(isNaN(newVal)||newVal<0) newVal=0;
+
+      const delta = newVal - oldVal;
+      if(delta>0){
+        if(landfillSimulated - delta < 0){
+          showAlert("אין מספיק פסולת להטמנה כדי להמיר לערך המבוקש.");
+          newVal = oldVal + landfillSimulated;
         }
+        landfillSimulated -= (newVal - oldVal);
+      }else if(delta<0){
+        landfillSimulated += (oldVal - newVal);
+      }
 
-        function showAlert(message) {
-            alertMessage.textContent = message;
-            alertBox.classList.remove('hidden');
-            alertBox.classList.add('show');
-            setTimeout(hideAlert, 5000);
-        }
+      simulatedValues[material]=newVal;
+      e.target.value=newVal.toFixed(2);
+      syncLandfillCell(); updateSummary(); setButtonsAvailability();
+    }
 
-        function hideAlert() {
-            alertBox.classList.remove('show');
-            alertBox.classList.add('hidden');
-        }
+    // --- Summary & Costs (weighted) ---
+    function updateSummary(){
+      if(!currentMunicipality) return;
+      const data = municipalities[currentMunicipality];
 
-        function syncLandfillCell() {
-            const cell = document.querySelector('.simulated-value[data-type="General Household Landfill"]');
-            if (cell) cell.textContent = landfillSimulated.toFixed(2);
-        }
+      const originalRecycled = Object.values(data.recyclables).reduce((s,v)=>s+v,0);
+      const simulatedRecycled = Object.values(simulatedValues).reduce((s,v)=>s+v,0);
 
-        function setButtonsAvailability() {
-            const disabled = landfillSimulated <= 0.000001;
-            document.querySelectorAll('.increase-btn').forEach(btn => {
-                btn.disabled = disabled;
-                btn.classList.toggle('opacity-50', disabled);
-                btn.classList.toggle('cursor-not-allowed', disabled);
-            });
-        }
+      const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s,v)=>s+v,0);
+      const simulatedNonRecycled = landfillSimulated +
+        data.nonRecyclables["General Bulky Landfill"] +
+        (data.nonRecyclables["Prunings Sent to Landfill"]||0);
 
-        // Load data for selected municipality
-        function loadMunicipalityData() {
-            const selectedMunicipality = municipalitySelect.value;
-            if (!selectedMunicipality) return;
+      recycledOriginal.textContent = `מקור: ${formatNumber(originalRecycled)}`;
+      recycledSimulated.textContent = `סימולציה: ${formatNumber(simulatedRecycled)}`;
+      nonRecycledOriginal.textContent = `מקור: ${formatNumber(originalNonRecycled)}`;
+      nonRecycledSimulated.textContent = `סימולציה: ${formatNumber(simulatedNonRecycled)}`;
 
-            currentMunicipality = selectedMunicipality;
-            const data = municipalities[selectedMunicipality];
+      updateCostCalculations();
+    }
 
-            simulatedValues = { ...data.recyclables };
-            originalNonRecyclables = { ...data.nonRecyclables };
-            landfillSimulated = originalNonRecyclables["General Household Landfill"];
+    function updateCostCalculations(){
+      if(!currentMunicipality) return;
+      costPerTon = parseFloat(costPerTonInput.value) || 0;
+      const data = municipalities[currentMunicipality];
 
-            // Recyclables table
-            recyclablesTable.innerHTML = '';
-            Object.entries(data.recyclables).forEach(([material, value]) => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50';
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${labelsRecyclables[material] || material}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatNumber(value)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">
-                        <input type="number" class="w-24 px-2 py-1 border border-gray-300 rounded simulated-input"
-                               data-material="${material}" value="${value.toFixed(2)}">
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div class="flex items-center space-x-2 space-x-reverse">
-                            <button class="decrease-btn px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200" data-material="${material}">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                            <button class="increase-btn px-2 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200" data-material="${material}">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                    </td>
-                `;
-                recyclablesTable.appendChild(row);
-            });
+      const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s,v)=>s+v,0);
+      const originalCostValue = originalNonRecycled * costPerTon;
 
-            // Attach events
-            document.querySelectorAll('.simulated-input').forEach(input => {
-                input.addEventListener('change', updateSimulatedValue);
-            });
-            document.querySelectorAll('.increase-btn').forEach(btn => {
-                btn.addEventListener('click', increaseRecyclable);
-            });
-            document.querySelectorAll('.decrease-btn').forEach(btn => {
-                btn.addEventListener('click', decreaseRecyclable);
-            });
+      let weightedSavingsTons = 0;
+      for(const material in data.recyclables){
+        const base = data.recyclables[material]||0;
+        const sim = simulatedValues[material]||0;
+        const delta = sim - base;
+        const factor = (material in savingsFactor) ? savingsFactor[material] : savingsFactor.default;
+        weightedSavingsTons += delta * factor;
+      }
 
-            // Non-recyclables table
-            nonRecyclablesTable.innerHTML = '';
-            Object.entries(data.nonRecyclables).forEach(([type, value]) => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50';
-                const simVal = (type === "General Household Landfill" ? landfillSimulated : value);
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${labelsNonRecyclables[type] || type}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${value.toFixed(2)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold simulated-value" data-type="${type}">
-                        ${simVal.toFixed(2)}
-                    </td>
-                `;
-                nonRecyclablesTable.appendChild(row);
-            });
+      const totalSavingsCurrency = weightedSavingsTons * costPerTon;
+      const simulatedCostValue = originalCostValue - totalSavingsCurrency;
 
-            // Summary
-            totalWasteOriginal.textContent = data.totalWaste.toFixed(2);
-            setButtonsAvailability();
-            updateSummary();
-        }
+      originalCost.textContent = `עלות מקורית: ₪${formatNumber(originalCostValue)}`;
+      simulatedCost.textContent = `עלות בסימולציה: ₪${formatNumber(simulatedCostValue)}`;
+      estimatedSavings.textContent = `₪${formatNumber(totalSavingsCurrency)}`;
 
-        // Button handlers with mass-balance
-        function increaseRecyclable(e) {
-            const material = e.target.getAttribute('data-material') || e.target.parentElement.getAttribute('data-material');
-            if (landfillSimulated <= 0) { showAlert("לא נותרה פסולת להטמנה שניתן להמיר למיחזור."); return; }
+      if(totalSavingsCurrency>0){estimatedSavings.classList.remove('text-red-600');estimatedSavings.classList.add('text-green-600');}
+      else if(totalSavingsCurrency<0){estimatedSavings.classList.remove('text-green-600');estimatedSavings.classList.add('text-red-600');}
+      else{estimatedSavings.classList.remove('text-green-600','text-red-600');}
+    }
 
-            simulatedValues[material] = (simulatedValues[material] || 0) + 1;
-            landfillSimulated -= 1;
+    // --- Reset ---
+    function resetSimulation(){
+      if(!currentMunicipality) return;
+      simulatedValues = {...municipalities[currentMunicipality].recyclables};
+      landfillSimulated = municipalities[currentMunicipality].nonRecyclables["General Household Landfill"];
 
-            const row = e.target.closest('tr');
-            row.querySelector('input.simulated-input').value = simulatedValues[material].toFixed(2);
+      document.querySelectorAll('.simulated-value').forEach(el=>{
+        const type = el.getAttribute('data-type');
+        const base = municipalities[currentMunicipality].nonRecyclables[type];
+        el.textContent = (type==="General Household Landfill"?landfillSimulated:base).toFixed(2);
+      });
 
-            syncLandfillCell();
-            updateSummary();
-            setButtonsAvailability();
-        }
+      document.querySelectorAll('#recyclablesTable tr').forEach((row,idx)=>{
+        const material = Object.keys(municipalities[currentMunicipality].recyclables)[idx];
+        const input = row.querySelector('input.simulated-input');
+        if(input) input.value = simulatedValues[material].toFixed(2);
+      });
 
-        function decreaseRecyclable(e) {
-            const material = e.target.getAttribute('data-material') || e.target.parentElement.getAttribute('data-material');
-            if ((simulatedValues[material] || 0) <= 0) return;
-
-            simulatedValues[material] -= 1;
-            landfillSimulated += 1;
-
-            const row = e.target.closest('tr');
-            row.querySelector('input.simulated-input').value = simulatedValues[material].toFixed(2);
-
-            syncLandfillCell();
-            updateSummary();
-            setButtonsAvailability();
-        }
-
-        // Input change with mass-balance
-        function updateSimulatedValue(e) {
-            const material = e.target.getAttribute('data-material');
-            const oldVal = simulatedValues[material] || 0;
-            let newVal = parseFloat(e.target.value);
-            if (isNaN(newVal) || newVal < 0) newVal = 0;
-
-            const delta = newVal - oldVal;
-            if (delta > 0) {
-                if (landfillSimulated - delta < 0) {
-                    showAlert("אין מספיק פסולת להטמנה כדי להמיר לערך המבוקש.");
-                    newVal = oldVal + landfillSimulated; // מקסימום אפשרי
-                }
-                landfillSimulated -= (newVal - oldVal);
-            } else if (delta < 0) {
-                landfillSimulated += (oldVal - newVal);
-            }
-
-            simulatedValues[material] = newVal;
-            e.target.value = newVal.toFixed(2);
-
-            syncLandfillCell();
-            updateSummary();
-            setButtonsAvailability();
-        }
-
-        // Summary and weighted cost
-        function updateSummary() {
-            if (!currentMunicipality) return;
-
-            const data = municipalities[currentMunicipality];
-
-            const originalRecycled = Object.values(data.recyclables).reduce((s, v) => s + v, 0);
-            const simulatedRecycled = Object.values(simulatedValues).reduce((s, v) => s + v, 0);
-
-            const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s, v) => s + v, 0);
-            const simulatedNonRecycled = landfillSimulated +
-                                         data.nonRecyclables["General Bulky Landfill"] +
-                                         (data.nonRecyclables["Prunings Sent to Landfill"] || 0);
-
-            recycledOriginal.textContent = `מקור: ${formatNumber(originalRecycled)}`;
-            recycledSimulated.textContent = `סימולציה: ${formatNumber(simulatedRecycled)}`;
-            nonRecycledOriginal.textContent = `מקור: ${formatNumber(originalNonRecycled)}`;
-            nonRecycledSimulated.textContent = `סימולציה: ${formatNumber(simulatedNonRecycled)}`;
-
-            updateCostCalculations();
-        }
-
-        function updateCostCalculations() {
-            if (!currentMunicipality) return;
-
-            costPerTon = parseFloat(costPerTonInput.value) || 0;
-            const data = municipalities[currentMunicipality];
-
-            // Original cost (כל הלא-ממוחזרת * עלות לטון)
-            const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s, v) => s + v, 0);
-            const originalCostValue = originalNonRecycled * costPerTon;
-
-            // Weighted savings (דלתא מיחזור * מקדם-חיסכון-לחומר * עלות לטון)
-            let weightedSavingsTons = 0;
-            for (const material in data.recyclables) {
-                const base = data.recyclables[material] || 0;
-                const sim  = simulatedValues[material] || 0;
-                const delta = sim - base; // טון שהוזז להמיחזור (יכול להיות שלילי)
-                const factor = (material in savingsFactor) ? savingsFactor[material] : savingsFactor.default;
-                weightedSavingsTons += delta * factor;
-            }
-
-            const totalSavingsCurrency = weightedSavingsTons * costPerTon;
-            const simulatedCostValue = originalCostValue - totalSavingsCurrency;
-
-            // Update UI
-            originalCost.textContent = `עלות מקורית: ₪${formatNumber(originalCostValue)}`;
-            simulatedCost.textContent = `עלות בסימולציה: ₪${formatNumber(simulatedCostValue)}`;
-            estimatedSavings.textContent = `₪${formatNumber(totalSavingsCurrency)}`;
-
-            // Color savings based on value
-            if (totalSavingsCurrency > 0) {
-                estimatedSavings.classList.remove('text-red-600');
-                estimatedSavings.classList.add('text-green-600');
-            } else if (totalSavingsCurrency < 0) {
-                estimatedSavings.classList.remove('text-green-600');
-                estimatedSavings.classList.add('text-red-600');
-            } else {
-                estimatedSavings.classList.remove('text-green-600', 'text-red-600');
-            }
-        }
-
-        // Reset
-        function resetSimulation() {
-            if (!currentMunicipality) return;
-
-            simulatedValues = { ...municipalities[currentMunicipality].recyclables };
-            landfillSimulated = municipalities[currentMunicipality].nonRecyclables["General Household Landfill"];
-
-            document.querySelectorAll('.simulated-value').forEach(el => {
-                const type = el.getAttribute('data-type');
-                const base = municipalities[currentMunicipality].nonRecyclables[type];
-                el.textContent = (type === "General Household Landfill" ? landfillSimulated : base).toFixed(2);
-            });
-
-            document.querySelectorAll('#recyclablesTable tr').forEach((row, index) => {
-                const material = Object.keys(municipalities[currentMunicipality].recyclables)[index];
-                const input = row.querySelector('input.simulated-input');
-                if (input) input.value = simulatedValues[material].toFixed(2);
-            });
-
-            setButtonsAvailability();
-            updateSummary();
-        }
-    </script>
+      setButtonsAvailability(); updateSummary();
+    }
+  </script>
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=kevincivix/muniwaste" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
 </html>
