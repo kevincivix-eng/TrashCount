@@ -12,6 +12,8 @@
     input[type="number"]::-webkit-inner-spin-button,
     input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
     input[type="number"]{-moz-appearance:textfield}
+    /* הדגשה זמנית לשדה העלות בעת קפיצה אליו */
+    .focus-highlight{box-shadow:0 0 0 3px rgba(34,197,94,.6)}
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -31,6 +33,7 @@
         <label for="municipality" class="block text-sm font-medium text-gray-700 mb-1">בחר/י רשות מקומית</label>
         <select id="municipality" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
           <option value="">בחר/י רשות</option>
+          <option value="ALL_EAST_NEGEV">כלל רשויות הנגב המזרחי</option>
           <option value="Kuseife">כסייפה</option>
           <option value="Yeruham">ירוחם</option>
           <option value="Mitzpe Ramon">מצפה רמון</option>
@@ -47,7 +50,7 @@
       </div>
       <div>
         <label for="costPerTon" class="block text-sm font-medium text-gray-700 mb-1">עלות להטמנת טון פסולת (₪)</label>
-        <input type="number" id="costPerTon" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" placeholder="הקלד/י עלות לטון">
+        <input type="number" id="costPerTon" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" placeholder="הקלד/י עלות לטון" min="0" step="0.01">
       </div>
     </div>
 
@@ -131,12 +134,21 @@
           <p id="originalCost" class="text-sm text-gray-600">עלות מקורית: ₪0</p>
           <p id="simulatedCost" class="text-sm text-gray-600">עלות בסימולציה: ₪0</p>
           <p id="estimatedSavings" class="text-xl font-bold text-green-600">₪0</p>
+          <!-- הערה לחיצה שמקפיצה לשדה העלות -->
+          <button id="costHint" type="button" class="mt-2 text-xs text-blue-600 underline hover:text-blue-700">
+            יש למלא את - עלות להטמנת טון פסולת (₪)
+          </button>
         </div>
       </div>
     </div>
 
+    <!-- Footer note -->
+    <p class="text-xs text-gray-500 mt-6 text-center">
+      כל הנתונים מבוססים על פי דו״ח (טופס 1) כמויות פסולת ומִחזור שנתי של הרשות המקומית של המשרד להגנת הסביבה.
+    </p>
+
     <!-- Reset -->
-    <div class="flex justify-center">
+    <div class="flex justify-center mt-4">
       <button id="resetButton" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
         <i class="fas fa-redo ml-2"></i>איפוס סימולציה
       </button>
@@ -201,12 +213,27 @@
     const alertBox = document.getElementById('alertBox');
     const alertMessage = document.getElementById('alertMessage');
     const closeAlert = document.getElementById('closeAlert');
+    const costHint = document.getElementById('costHint');
 
     // --- Events ---
     municipalitySelect.addEventListener('change', loadMunicipalityData);
-    costPerTonInput.addEventListener('input', updateCostCalculations);
+    costPerTonInput.addEventListener('input', () => { updateCostCalculations(); toggleCostHint(); });
     resetButton.addEventListener('click', resetSimulation);
     closeAlert.addEventListener('click', hideAlert);
+    costHint.addEventListener('click', () => {
+      costPerTonInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => costPerTonInput.focus(), 350);
+      costPerTonInput.classList.add('focus-highlight');
+      setTimeout(() => costPerTonInput.classList.remove('focus-highlight'), 1400);
+    });
+
+    function toggleCostHint(){
+      const empty = !(parseFloat(costPerTonInput.value) > 0);
+      costHint.classList.toggle('invisible', !empty);
+      costHint.classList.toggle('hidden', false); // לעולם קיים, רק מוסתר/מוצג
+    }
+    // הפעלה ראשונית של מצב ההערה
+    toggleCostHint();
 
     // --- Helpers ---
     function formatNumber(n){return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
@@ -215,17 +242,43 @@
     function syncLandfillCell(){const c=document.querySelector('.simulated-value[data-type="General Household Landfill"]'); if(c) c.textContent=landfillSimulated.toFixed(2)}
     function setButtonsAvailability(){const dis=landfillSimulated<=0.000001; document.querySelectorAll('.increase-btn').forEach(b=>{b.disabled=dis;b.classList.toggle('opacity-50',dis);b.classList.toggle('cursor-not-allowed',dis);})}
 
+    // --- Aggregation helper (ALL_EAST_NEGEV) ---
+    function aggregateAllMunicipalities(){
+      const keys = Object.keys(municipalities);
+      const agg = { recyclables:{}, nonRecyclables:{}, totalWaste:0 };
+
+      // אתחול מפת חומרים
+      keys.forEach(k=>{
+        const r = municipalities[k].recyclables;
+        Object.keys(r).forEach(mat => { if(!(mat in agg.recyclables)) agg.recyclables[mat]=0; });
+        const n = municipalities[k].nonRecyclables;
+        Object.keys(n).forEach(t => { if(!(t in agg.nonRecyclables)) agg.nonRecyclables[t]=0; });
+      });
+
+      // סכימה
+      keys.forEach(k=>{
+        const {recyclables, nonRecyclables, totalWaste} = municipalities[k];
+        Object.entries(recyclables).forEach(([mat,val])=>{ agg.recyclables[mat] += (val||0); });
+        Object.entries(nonRecyclables).forEach(([t,val])=>{ agg.nonRecyclables[t] += (val||0); });
+        agg.totalWaste += (totalWaste||0);
+      });
+
+      return agg;
+    }
+
     // --- Load & Build Tables ---
     function loadMunicipalityData(){
       const key = municipalitySelect.value;
       if(!key) return;
 
       currentMunicipality = key;
-      const data = municipalities[key];
+
+      // בוחר דאטה: רשות בודדת או אגרגציה
+      const data = (key === 'ALL_EAST_NEGEV') ? aggregateAllMunicipalities() : municipalities[key];
 
       simulatedValues = {...data.recyclables};
       originalNonRecyclables = {...data.nonRecyclables};
-      landfillSimulated = originalNonRecyclables["General Household Landfill"];
+      landfillSimulated = originalNonRecyclables["General Household Landfill"] || 0;
 
       // Recyclables table (with tooltip for Paper/Cardboard)
       recyclablesTable.innerHTML = '';
@@ -236,7 +289,7 @@
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50';
         row.innerHTML = `
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 relative group">
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 relative group" ${isSpecial ? `title="נייר וקרטון מזכים ב־10% חיסכון בלבד לטון"` : ''}>
             ${label}${isSpecial ? `<span class="ml-1 text-red-500">*</span>
               <div class="absolute right-full top-1/2 -translate-y-1/2 mr-2 w-56 bg-black text-white text-xs rounded py-1 px-2 hidden group-hover:block z-10">
                 נייר וקרטון מזכים ב־10% חיסכון בלבד לטון
@@ -244,7 +297,7 @@
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatNumber(value)}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">
-            <input type="number" class="w-24 px-2 py-1 border border-gray-300 rounded simulated-input" data-material="${material}" value="${value.toFixed(2)}">
+            <input type="number" class="w-24 px-2 py-1 border border-gray-300 rounded simulated-input" data-material="${material}" value="${value.toFixed(2)}" min="0" step="0.01">
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
             <div class="flex items-center space-x-2 space-x-reverse">
@@ -272,12 +325,12 @@
         const simVal = (type==="General Household Landfill" ? landfillSimulated : val);
         row.innerHTML = `
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${labelsNonRecyclables[type] || type}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${val.toFixed(2)}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold simulated-value" data-type="${type}">${simVal.toFixed(2)}</td>`;
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${(val||0).toFixed(2)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold simulated-value" data-type="${type}">${(simVal||0).toFixed(2)}</td>`;
         nonRecyclablesTable.appendChild(row);
       });
 
-      totalWasteOriginal.textContent = data.totalWaste.toFixed(2);
+      totalWasteOriginal.textContent = (data.totalWaste||0).toFixed(2);
       setButtonsAvailability();
       updateSummary();
     }
@@ -327,14 +380,16 @@
     // --- Summary & Costs (weighted) ---
     function updateSummary(){
       if(!currentMunicipality) return;
-      const data = municipalities[currentMunicipality];
 
-      const originalRecycled = Object.values(data.recyclables).reduce((s,v)=>s+v,0);
-      const simulatedRecycled = Object.values(simulatedValues).reduce((s,v)=>s+v,0);
+      // בסיס הנתונים (בודד או אגרגט)
+      const data = (currentMunicipality === 'ALL_EAST_NEGEV') ? aggregateAllMunicipalities() : municipalities[currentMunicipality];
 
-      const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s,v)=>s+v,0);
+      const originalRecycled = Object.values(data.recyclables).reduce((s,v)=>s+(v||0),0);
+      const simulatedRecycled = Object.values(simulatedValues).reduce((s,v)=>s+(v||0),0);
+
+      const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s,v)=>s+(v||0),0);
       const simulatedNonRecycled = landfillSimulated +
-        data.nonRecyclables["General Bulky Landfill"] +
+        (data.nonRecyclables["General Bulky Landfill"]||0) +
         (data.nonRecyclables["Prunings Sent to Landfill"]||0);
 
       recycledOriginal.textContent = `מקור: ${formatNumber(originalRecycled)}`;
@@ -348,15 +403,17 @@
     function updateCostCalculations(){
       if(!currentMunicipality) return;
       costPerTon = parseFloat(costPerTonInput.value) || 0;
-      const data = municipalities[currentMunicipality];
 
-      const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s,v)=>s+v,0);
+      // בסיס הנתונים (בודד או אגרגט)
+      const data = (currentMunicipality === 'ALL_EAST_NEGEV') ? aggregateAllMunicipalities() : municipalities[currentMunicipality];
+
+      const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s,v)=>s+(v||0),0);
       const originalCostValue = originalNonRecycled * costPerTon;
 
       let weightedSavingsTons = 0;
       for(const material in data.recyclables){
         const base = data.recyclables[material]||0;
-        const sim = simulatedValues[material]||0;
+        const sim  = simulatedValues[material]||0;
         const delta = sim - base;
         const factor = (material in savingsFactor) ? savingsFactor[material] : savingsFactor.default;
         weightedSavingsTons += delta * factor;
@@ -365,7 +422,7 @@
       const totalSavingsCurrency = weightedSavingsTons * costPerTon;
       const simulatedCostValue = originalCostValue - totalSavingsCurrency;
 
-      originalCost.textContent = `עלות מקורית: ₪${formatNumber(originalCostValue)}`;
+      originalCost.textContent  = `עלות מקורית: ₪${formatNumber(originalCostValue)}`;
       simulatedCost.textContent = `עלות בסימולציה: ₪${formatNumber(simulatedCostValue)}`;
       estimatedSavings.textContent = `₪${formatNumber(totalSavingsCurrency)}`;
 
@@ -377,22 +434,24 @@
     // --- Reset ---
     function resetSimulation(){
       if(!currentMunicipality) return;
-      simulatedValues = {...municipalities[currentMunicipality].recyclables};
-      landfillSimulated = municipalities[currentMunicipality].nonRecyclables["General Household Landfill"];
+      const data = (currentMunicipality === 'ALL_EAST_NEGEV') ? aggregateAllMunicipalities() : municipalities[currentMunicipality];
+
+      simulatedValues = {...data.recyclables};
+      landfillSimulated = (data.nonRecyclables["General Household Landfill"]||0);
 
       document.querySelectorAll('.simulated-value').forEach(el=>{
         const type = el.getAttribute('data-type');
-        const base = municipalities[currentMunicipality].nonRecyclables[type];
+        const base = data.nonRecyclables[type]||0;
         el.textContent = (type==="General Household Landfill"?landfillSimulated:base).toFixed(2);
       });
 
       document.querySelectorAll('#recyclablesTable tr').forEach((row,idx)=>{
-        const material = Object.keys(municipalities[currentMunicipality].recyclables)[idx];
+        const material = Object.keys(data.recyclables)[idx];
         const input = row.querySelector('input.simulated-input');
         if(input) input.value = simulatedValues[material].toFixed(2);
       });
 
-      setButtonsAvailability(); updateSummary();
+      setButtonsAvailability(); updateSummary(); toggleCostHint();
     }
   </script>
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=kevincivix/muniwaste" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
