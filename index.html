@@ -12,8 +12,7 @@
     input[type="number"]::-webkit-inner-spin-button,
     input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
     input[type="number"]{-moz-appearance:textfield}
-    /* הדגשה זמנית לשדה העלות בעת קפיצה אליו */
-    .focus-highlight{box-shadow:0 0 0 3px rgba(34,197,94,.6)}
+    .hint-link{cursor:pointer;text-decoration:underline}
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -33,7 +32,6 @@
         <label for="municipality" class="block text-sm font-medium text-gray-700 mb-1">בחר/י רשות מקומית</label>
         <select id="municipality" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
           <option value="">בחר/י רשות</option>
-          <option value="ALL_EAST_NEGEV">כלל רשויות הנגב המזרחי</option>
           <option value="Kuseife">כסייפה</option>
           <option value="Yeruham">ירוחם</option>
           <option value="Mitzpe Ramon">מצפה רמון</option>
@@ -50,7 +48,7 @@
       </div>
       <div>
         <label for="costPerTon" class="block text-sm font-medium text-gray-700 mb-1">עלות להטמנת טון פסולת (₪)</label>
-        <input type="number" id="costPerTon" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" placeholder="הקלד/י עלות לטון" min="0" step="0.01">
+        <input type="number" id="costPerTon" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" placeholder="הקלד/י עלות לטון">
       </div>
     </div>
 
@@ -67,14 +65,11 @@
       </div>
     </div>
 
-    <!-- Tables -->
+    <!-- Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-      <!-- Recyclables -->
+      <!-- עמודה 1: פסולת מופרדת במקור -->
       <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold text-green-700 mb-4">
-         פסולת מופרדת במקור
-          <span class="text-xs text-gray-500"></span>
-        </h2>
+        <h2 class="text-xl font-semibold text-green-700 mb-4">פסולת מופרדת במקור</h2>
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -90,20 +85,41 @@
         </div>
       </div>
 
-      <!-- Non-Recyclables -->
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold text-green-700 mb-4">פסולת לא ממוחזרת</h2>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סוג</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">מקור (טון)</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סימולציה (טון)</th>
-              </tr>
-            </thead>
-            <tbody id="nonRecyclablesTable" class="bg-white divide-y divide-gray-200"></tbody>
-          </table>
+      <!-- עמודה 2: שני קלפים מוערמים -->
+      <div class="flex flex-col gap-6">
+        <!-- פסולת לא ממוחזרת -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h2 class="text-xl font-semibold text-green-700 mb-4">פסולת לא ממוחזרת</h2>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סוג</th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">מקור (טון)</th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סימולציה (טון)</th>
+                </tr>
+              </thead>
+              <tbody id="nonRecyclablesTable" class="bg-white divide-y divide-gray-200"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- חישוב מחזור פוטנציאל לפי סוג פח -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h2 class="text-xl font-semibold text-green-700 mb-4">חישוב מחזור פוטנציאל לפי סוג פח</h2>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סוג פח</th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">טון פוטנציאלי</th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">מספר פחים</th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">פעולות</th>
+                </tr>
+              </thead>
+              <tbody id="binsTable" class="bg-white divide-y divide-gray-200"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -130,25 +146,22 @@
           <p class="text-sm text-gray-500">טון</p>
         </div>
         <div class="bg-gray-50 p-4 rounded-lg">
-          <h3 class="text-sm font-medium text-gray-500">חיסכון מוערך</h3>
+          <h3 class="text-sm font-medium text-gray-500">
+            חיסכון מוערך
+            <span id="costHint" class="text-xs text-blue-600 hint-link">(להפעלת הסימולציה יש למלא עלות לטון)</span>
+          </h3>
           <p id="originalCost" class="text-sm text-gray-600">עלות מקורית: ₪0</p>
           <p id="simulatedCost" class="text-sm text-gray-600">עלות בסימולציה: ₪0</p>
           <p id="estimatedSavings" class="text-xl font-bold text-green-600">₪0</p>
-          <!-- הערה לחיצה שמקפיצה לשדה העלות -->
-          <button id="costHint" type="button" class="mt-2 text-xs text-blue-600 underline hover:text-blue-700">
-            יש למלא את - עלות להטמנת טון פסולת (₪)
-          </button>
         </div>
       </div>
+      <p class="mt-4 text-xs text-gray-500">
+        כל הנתונים מבוססים על פי דו"ח (טופס 1) — כמויות פסולת ומִחזור שנתי של הרשות המקומית (המשרד להגנת הסביבה).
+      </p>
     </div>
 
-    <!-- Footer note -->
-    <p class="text-xs text-gray-500 mt-6 text-center">
-      *כל הנתונים מבוססים על פי דו״ח (טופס 1) כמויות פסולת ומִחזור שנתי של הרשות המקומית של המשרד להגנת הסביבה.
-    </p>
-
     <!-- Reset -->
-    <div class="flex justify-center mt-4">
+    <div class="flex justify-center">
       <button id="resetButton" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
         <i class="fas fa-redo ml-2"></i>איפוס סימולציה
       </button>
@@ -172,7 +185,6 @@
       "Ramat Negev": { recyclables: { "Paper":40.75,"Cardboard":281.07,"Plastic":2.7,"Glass":26.5,"Electronic Waste":4,"Batteries and Accumulators":0.7,"Orange Bin (Plastic Packaging)":79.88,"Textiles":5,"Oil":0,"Metal and Iron":90,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":230.4,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":9518.6,"General Bulky Landfill":525.52,"Prunings Sent to Landfill":0 }, totalWaste:10805.12 }
     };
 
-    // Labels (display)
     const labelsRecyclables = {
       "Paper":"נייר","Cardboard":"קרטון","Plastic":"פלסטיק","Glass":"זכוכית","Electronic Waste":"פסולת אלקטרונית",
       "Batteries and Accumulators":"סוללות ומצברים","Orange Bin (Plastic Packaging)":"פח כתום (אריזות)","Textiles":"טקסטיל",
@@ -189,18 +201,25 @@
     // Savings factors
     const savingsFactor = { "Paper":0.10, "Cardboard":0.10, "default":1.00 };
 
+    // Bins config
+    const binsConfig = [
+      { id:'orange', label:'פח כתום', targetMaterialKey:'Orange Bin (Plastic Packaging)', tonPerBin:0.855, min:0, max:Infinity, step:1 }
+    ];
+    let binsState = { orange: 0 };
+
     // --- State ---
     let currentMunicipality = null;
-    let simulatedValues = {};
+    let manualSimulated = {};
     let originalNonRecyclables = {};
     let costPerTon = 0;
-    let landfillSimulated = 0; // מצב ההטמנה בסימולציה
+    let landfillSimulated = 0;
 
     // --- DOM ---
     const municipalitySelect = document.getElementById('municipality');
     const costPerTonInput = document.getElementById('costPerTon');
     const recyclablesTable = document.getElementById('recyclablesTable');
     const nonRecyclablesTable = document.getElementById('nonRecyclablesTable');
+    const binsTable = document.getElementById('binsTable');
     const totalWasteOriginal = document.getElementById('totalWasteOriginal');
     const recycledOriginal = document.getElementById('recycledOriginal');
     const recycledSimulated = document.getElementById('recycledSimulated');
@@ -217,79 +236,74 @@
 
     // --- Events ---
     municipalitySelect.addEventListener('change', loadMunicipalityData);
-    costPerTonInput.addEventListener('input', () => { updateCostCalculations(); toggleCostHint(); });
+    costPerTonInput.addEventListener('input', updateCostCalculations);
     resetButton.addEventListener('click', resetSimulation);
     closeAlert.addEventListener('click', hideAlert);
-    costHint.addEventListener('click', () => {
-      costPerTonInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => costPerTonInput.focus(), 350);
-      costPerTonInput.classList.add('focus-highlight');
-      setTimeout(() => costPerTonInput.classList.remove('focus-highlight'), 1400);
-    });
-
-    function toggleCostHint(){
-      const empty = !(parseFloat(costPerTonInput.value) > 0);
-      costHint.classList.toggle('invisible', !empty);
-      costHint.classList.toggle('hidden', false); // לעולם קיים, רק מוסתר/מוצג
-    }
-    // הפעלה ראשונית של מצב ההערה
-    toggleCostHint();
+    costHint.addEventListener('click', () => { costPerTonInput.scrollIntoView({behavior:'smooth', block:'center'}); costPerTonInput.focus(); });
 
     // --- Helpers ---
     function formatNumber(n){return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+    function formatPotential(n){return n===0 ? '0' : n.toFixed(3)} // עבור טון פוטנציאלי: 0 ואז מצטבר ב־0.855
     function showAlert(msg){alertMessage.textContent=msg;alertBox.classList.remove('hidden');alertBox.classList.add('show');setTimeout(hideAlert,5000)}
     function hideAlert(){alertBox.classList.remove('show');alertBox.classList.add('hidden')}
     function syncLandfillCell(){const c=document.querySelector('.simulated-value[data-type="General Household Landfill"]'); if(c) c.textContent=landfillSimulated.toFixed(2)}
-    function setButtonsAvailability(){const dis=landfillSimulated<=0.000001; document.querySelectorAll('.increase-btn').forEach(b=>{b.disabled=dis;b.classList.toggle('opacity-50',dis);b.classList.toggle('cursor-not-allowed',dis);})}
-
-    // --- Aggregation helper (ALL_EAST_NEGEV) ---
-    function aggregateAllMunicipalities(){
-      const keys = Object.keys(municipalities);
-      const agg = { recyclables:{}, nonRecyclables:{}, totalWaste:0 };
-
-      // אתחול מפת חומרים
-      keys.forEach(k=>{
-        const r = municipalities[k].recyclables;
-        Object.keys(r).forEach(mat => { if(!(mat in agg.recyclables)) agg.recyclables[mat]=0; });
-        const n = municipalities[k].nonRecyclables;
-        Object.keys(n).forEach(t => { if(!(t in agg.nonRecyclables)) agg.nonRecyclables[t]=0; });
+    function setButtonsAvailability(){
+      const dis=landfillSimulated<=0.000001;
+      document.querySelectorAll('.increase-btn').forEach(b=>{b.disabled=dis;b.classList.toggle('opacity-50',dis);b.classList.toggle('cursor-not-allowed',dis);});
+      document.querySelectorAll('.bin-increase-btn').forEach(b=>{b.disabled=dis;b.classList.toggle('opacity-50',dis);b.classList.toggle('cursor-not-allowed',dis);});
+    }
+    function computeBinsContributionByMaterial(){
+      const map = {};
+      binsConfig.forEach(cfg=>{
+        const count = binsState[cfg.id]||0;
+        const addTons = count * cfg.tonPerBin;
+        if(!map[cfg.targetMaterialKey]) map[cfg.targetMaterialKey]=0;
+        map[cfg.targetMaterialKey] += addTons;
       });
-
-      // סכימה
-      keys.forEach(k=>{
-        const {recyclables, nonRecyclables, totalWaste} = municipalities[k];
-        Object.entries(recyclables).forEach(([mat,val])=>{ agg.recyclables[mat] += (val||0); });
-        Object.entries(nonRecyclables).forEach(([t,val])=>{ agg.nonRecyclables[t] += (val||0); });
-        agg.totalWaste += (totalWaste||0);
-      });
-
-      return agg;
+      return map;
+    }
+    function getFinalSimulatedFor(materialKey){
+      const manual = manualSimulated[materialKey]||0;
+      const contribMap = computeBinsContributionByMaterial();
+      const extra = contribMap[materialKey]||0;
+      return manual + extra;
+    }
+    function writeFinalIntoInput(materialKey){
+      const input = document.querySelector(`input.simulated-input[data-material="${CSS.escape(materialKey)}"]`);
+      if(input){ input.value = getFinalSimulatedFor(materialKey).toFixed(2); }
+    }
+    function updateBinPotentialCell(binId){
+      const cfg = binsConfig.find(b=>b.id===binId);
+      if(!cfg) return;
+      const cell = document.querySelector(`.bin-potential[data-binid="${binId}"]`);
+      if(cell){
+        const potential = (binsState[binId]||0) * cfg.tonPerBin;
+        cell.textContent = formatPotential(potential);
+      }
     }
 
-    // --- Load & Build Tables ---
+    // --- Load & Build ---
     function loadMunicipalityData(){
       const key = municipalitySelect.value;
       if(!key) return;
 
       currentMunicipality = key;
+      const data = municipalities[key];
 
-      // בוחר דאטה: רשות בודדת או אגרגציה
-      const data = (key === 'ALL_EAST_NEGEV') ? aggregateAllMunicipalities() : municipalities[key];
-
-      simulatedValues = {...data.recyclables};
+      manualSimulated = {...data.recyclables};
       originalNonRecyclables = {...data.nonRecyclables};
-      landfillSimulated = originalNonRecyclables["General Household Landfill"] || 0;
+      landfillSimulated = originalNonRecyclables["General Household Landfill"];
+      binsState = { orange: 0 };
 
-      // Recyclables table (with tooltip for Paper/Cardboard)
+      // Recyclables table
       recyclablesTable.innerHTML = '';
       Object.entries(data.recyclables).forEach(([material, value])=>{
         const isSpecial = (material==="Paper" || material==="Cardboard");
         const label = labelsRecyclables[material] || material;
-
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50';
         row.innerHTML = `
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 relative group" ${isSpecial ? `title="נייר וקרטון מזכים ב־10% חיסכון בלבד לטון"` : ''}>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 relative group">
             ${label}${isSpecial ? `<span class="ml-1 text-red-500">*</span>
               <div class="absolute right-full top-1/2 -translate-y-1/2 mr-2 w-56 bg-black text-white text-xs rounded py-1 px-2 hidden group-hover:block z-10">
                 נייר וקרטון מזכים ב־10% חיסכון בלבד לטון
@@ -297,7 +311,7 @@
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatNumber(value)}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">
-            <input type="number" class="w-24 px-2 py-1 border border-gray-300 rounded simulated-input" data-material="${material}" value="${value.toFixed(2)}" min="0" step="0.01">
+            <input type="number" class="w-24 px-2 py-1 border border-gray-300 rounded simulated-input" data-material="${material}" value="${(value).toFixed(2)}">
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
             <div class="flex items-center space-x-2 space-x-reverse">
@@ -311,8 +325,6 @@
           </td>`;
         recyclablesTable.appendChild(row);
       });
-
-      // Attach listeners
       document.querySelectorAll('.simulated-input').forEach(inp=>inp.addEventListener('change', updateSimulatedValue));
       document.querySelectorAll('.increase-btn').forEach(b=>b.addEventListener('click', increaseRecyclable));
       document.querySelectorAll('.decrease-btn').forEach(b=>b.addEventListener('click', decreaseRecyclable));
@@ -325,71 +337,188 @@
         const simVal = (type==="General Household Landfill" ? landfillSimulated : val);
         row.innerHTML = `
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${labelsNonRecyclables[type] || type}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${(val||0).toFixed(2)}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold simulated-value" data-type="${type}">${(simVal||0).toFixed(2)}</td>`;
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${val.toFixed(2)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold simulated-value" data-type="${type}">${simVal.toFixed(2)}</td>`;
         nonRecyclablesTable.appendChild(row);
       });
 
-      totalWasteOriginal.textContent = (data.totalWaste||0).toFixed(2);
+      // Bins table
+      buildBinsTable();
+
+      // Init inputs with final values
+      Object.keys(data.recyclables).forEach(writeFinalIntoInput);
+
+      totalWasteOriginal.textContent = data.totalWaste.toFixed(2);
       setButtonsAvailability();
       updateSummary();
     }
 
-    // --- Handlers with Mass Balance ---
+    function buildBinsTable(){
+      binsTable.innerHTML = '';
+      binsConfig.forEach(cfg=>{
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        const currentCount = binsState[cfg.id]||0;
+        const currentPotential = currentCount * cfg.tonPerBin;
+
+        // הוספת tooltip על "פח כתום"
+        const labelWithTooltip = `
+          <span class="relative group cursor-default">
+            ${cfg.label}
+            <div class="absolute right-full top-1/2 -translate-y-1/2 mr-2 w-72 bg-black text-white text-xs rounded py-2 px-3 hidden group-hover:block z-20">
+              כל פח כתום מהווה 0.855 טון חסכון בשנה על פי ממוצע ארצי בשנת 2021 - תאגיד תמיר
+            </div>
+          </span>`;
+
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${labelWithTooltip}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold bin-potential" data-binid="${cfg.id}">${formatPotential(currentPotential)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">
+            <input type="number" min="${cfg.min}" step="${cfg.step}" class="w-24 px-2 py-1 border border-gray-300 rounded bins-count-input" data-binid="${cfg.id}" value="${currentCount}">
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <div class="flex items-center space-x-2 space-x-reverse">
+              <button class="bin-decrease-btn px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200" data-binid="${cfg.id}">
+                <i class="fas fa-minus"></i>
+              </button>
+              <button class="bin-increase-btn px-2 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200" data-binid="${cfg.id}">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+          </td>`;
+        binsTable.appendChild(row);
+      });
+
+      document.querySelectorAll('.bins-count-input').forEach(inp=>{
+        inp.addEventListener('change', (e)=>{
+          const id = e.target.getAttribute('data-binid');
+          let desired = parseInt(e.target.value,10);
+          if(isNaN(desired) || desired<0) desired = 0;
+          setBinsCount(id, desired);
+        });
+      });
+      document.querySelectorAll('.bin-increase-btn').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          const id = e.currentTarget.getAttribute('data-binid');
+          setBinsCount(id, (binsState[id]||0) + 1);
+        });
+      });
+      document.querySelectorAll('.bin-decrease-btn').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          const id = e.currentTarget.getAttribute('data-binid');
+          setBinsCount(id, Math.max(0, (binsState[id]||0) - 1));
+        });
+      });
+    }
+
+    function setBinsCount(binId, newCount){
+      const cfg = binsConfig.find(b=>b.id===binId);
+      if(!cfg) return;
+      const oldCount = binsState[binId]||0;
+      if(newCount === oldCount) return;
+
+      const deltaCount = newCount - oldCount;
+      const deltaTons = deltaCount * cfg.tonPerBin;
+
+      if(deltaTons > 0){
+        if(landfillSimulated - deltaTons < 0){
+          const canAdd = Math.floor(landfillSimulated / cfg.tonPerBin + 1e-9);
+          const cappedCount = oldCount + canAdd;
+          if(cappedCount === oldCount){
+            showAlert("אין מספיק פסולת להטמנה כדי להוסיף פחים נוספים.");
+            const input = document.querySelector(`.bins-count-input[data-binid="${binId}"]`);
+            if(input) input.value = oldCount;
+            return;
+          }
+          binsState[binId] = cappedCount;
+          landfillSimulated -= canAdd * cfg.tonPerBin;
+          const input = document.querySelector(`.bins-count-input[data-binid="${binId}"]`);
+          if(input) input.value = cappedCount;
+        }else{
+          binsState[binId] = newCount;
+          landfillSimulated -= deltaTons;
+          const input = document.querySelector(`.bins-count-input[data-binid="${binId}"]`);
+          if(input) input.value = newCount;
+        }
+      }else{
+        binsState[binId] = newCount;
+        landfillSimulated += Math.abs(deltaTons);
+        const input = document.querySelector(`.bins-count-input[data-binid="${binId}"]`);
+        if(input) input.value = newCount;
+      }
+
+      // עדכון תא "טון פוטנציאלי" המצטבר
+      updateBinPotentialCell(binId);
+
+      // עדכון פסולת מופרדת במקור עבור החומר הייעודי
+      const targetKey = cfg.targetMaterialKey;
+      writeFinalIntoInput(targetKey);
+
+      syncLandfillCell();
+      setButtonsAvailability();
+      updateSummary();
+    }
+
+    // Manual controls (operate on manual part only)
     function increaseRecyclable(e){
       const material = e.target.getAttribute('data-material') || e.target.parentElement.getAttribute('data-material');
       if(landfillSimulated<=0){showAlert("לא נותרה פסולת להטמנה שניתן להמיר למיחזור."); return;}
-      simulatedValues[material] = (simulatedValues[material]||0)+1;
+      manualSimulated[material] = (manualSimulated[material]||0)+1;
       landfillSimulated -= 1;
-      const row = e.target.closest('tr');
-      row.querySelector('input.simulated-input').value = simulatedValues[material].toFixed(2);
+      writeFinalIntoInput(material);
       syncLandfillCell(); updateSummary(); setButtonsAvailability();
     }
-
     function decreaseRecyclable(e){
       const material = e.target.getAttribute('data-material') || e.target.parentElement.getAttribute('data-material');
-      if((simulatedValues[material]||0)<=0) return;
-      simulatedValues[material] -= 1;
-      landfillSimulated += 1;
-      const row = e.target.closest('tr');
-      row.querySelector('input.simulated-input').value = simulatedValues[material].toFixed(2);
+      const finalNow = getFinalSimulatedFor(material);
+      if(finalNow<=0) return;
+      const contrib = computeBinsContributionByMaterial()[material]||0;
+      if(manualSimulated[material] > 0){
+        manualSimulated[material] = Math.max(0, manualSimulated[material]-1);
+        landfillSimulated += 1;
+      }else{
+        return;
+      }
+      writeFinalIntoInput(material);
       syncLandfillCell(); updateSummary(); setButtonsAvailability();
     }
-
     function updateSimulatedValue(e){
       const material = e.target.getAttribute('data-material');
-      const oldVal = simulatedValues[material]||0;
-      let newVal = parseFloat(e.target.value); if(isNaN(newVal)||newVal<0) newVal=0;
+      const oldFinal = getFinalSimulatedFor(material);
+      let desiredFinal = parseFloat(e.target.value);
+      if(isNaN(desiredFinal) || desiredFinal<0) desiredFinal = 0;
 
-      const delta = newVal - oldVal;
-      if(delta>0){
-        if(landfillSimulated - delta < 0){
+      const contrib = computeBinsContributionByMaterial()[material]||0;
+      if(desiredFinal < contrib){ desiredFinal = contrib; }
+
+      const deltaFinal = desiredFinal - oldFinal;
+      if(deltaFinal>0){
+        if(landfillSimulated - deltaFinal < 0){
           showAlert("אין מספיק פסולת להטמנה כדי להמיר לערך המבוקש.");
-          newVal = oldVal + landfillSimulated;
+          desiredFinal = oldFinal + landfillSimulated;
         }
-        landfillSimulated -= (newVal - oldVal);
-      }else if(delta<0){
-        landfillSimulated += (oldVal - newVal);
+        landfillSimulated -= (desiredFinal - oldFinal);
+        manualSimulated[material] = Math.max(0, (manualSimulated[material]||0) + (desiredFinal - oldFinal));
+      }else if(deltaFinal<0){
+        landfillSimulated += (oldFinal - desiredFinal);
+        manualSimulated[material] = Math.max(0, (manualSimulated[material]||0) - (oldFinal - desiredFinal));
       }
-
-      simulatedValues[material]=newVal;
-      e.target.value=newVal.toFixed(2);
+      e.target.value = getFinalSimulatedFor(material).toFixed(2);
       syncLandfillCell(); updateSummary(); setButtonsAvailability();
     }
 
-    // --- Summary & Costs (weighted) ---
+    // Summary & Costs
     function updateSummary(){
       if(!currentMunicipality) return;
+      const data = municipalities[currentMunicipality];
 
-      // בסיס הנתונים (בודד או אגרגט)
-      const data = (currentMunicipality === 'ALL_EAST_NEGEV') ? aggregateAllMunicipalities() : municipalities[currentMunicipality];
+      const originalRecycled = Object.values(data.recyclables).reduce((s,v)=>s+v,0);
+      let simulatedRecycled = 0;
+      Object.keys(data.recyclables).forEach(k=>{ simulatedRecycled += getFinalSimulatedFor(k); });
 
-      const originalRecycled = Object.values(data.recyclables).reduce((s,v)=>s+(v||0),0);
-      const simulatedRecycled = Object.values(simulatedValues).reduce((s,v)=>s+(v||0),0);
-
-      const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s,v)=>s+(v||0),0);
+      const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s,v)=>s+v,0);
       const simulatedNonRecycled = landfillSimulated +
-        (data.nonRecyclables["General Bulky Landfill"]||0) +
+        data.nonRecyclables["General Bulky Landfill"] +
         (data.nonRecyclables["Prunings Sent to Landfill"]||0);
 
       recycledOriginal.textContent = `מקור: ${formatNumber(originalRecycled)}`;
@@ -403,18 +532,16 @@
     function updateCostCalculations(){
       if(!currentMunicipality) return;
       costPerTon = parseFloat(costPerTonInput.value) || 0;
+      const data = municipalities[currentMunicipality];
 
-      // בסיס הנתונים (בודד או אגרגט)
-      const data = (currentMunicipality === 'ALL_EAST_NEGEV') ? aggregateAllMunicipalities() : municipalities[currentMunicipality];
-
-      const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s,v)=>s+(v||0),0);
+      const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s,v)=>s+v,0);
       const originalCostValue = originalNonRecycled * costPerTon;
 
       let weightedSavingsTons = 0;
       for(const material in data.recyclables){
         const base = data.recyclables[material]||0;
-        const sim  = simulatedValues[material]||0;
-        const delta = sim - base;
+        const final = getFinalSimulatedFor(material);
+        const delta = final - base;
         const factor = (material in savingsFactor) ? savingsFactor[material] : savingsFactor.default;
         weightedSavingsTons += delta * factor;
       }
@@ -422,7 +549,7 @@
       const totalSavingsCurrency = weightedSavingsTons * costPerTon;
       const simulatedCostValue = originalCostValue - totalSavingsCurrency;
 
-      originalCost.textContent  = `עלות מקורית: ₪${formatNumber(originalCostValue)}`;
+      originalCost.textContent = `עלות מקורית: ₪${formatNumber(originalCostValue)}`;
       simulatedCost.textContent = `עלות בסימולציה: ₪${formatNumber(simulatedCostValue)}`;
       estimatedSavings.textContent = `₪${formatNumber(totalSavingsCurrency)}`;
 
@@ -431,27 +558,29 @@
       else{estimatedSavings.classList.remove('text-green-600','text-red-600');}
     }
 
-    // --- Reset ---
+    // Reset
     function resetSimulation(){
       if(!currentMunicipality) return;
-      const data = (currentMunicipality === 'ALL_EAST_NEGEV') ? aggregateAllMunicipalities() : municipalities[currentMunicipality];
+      const data = municipalities[currentMunicipality];
 
-      simulatedValues = {...data.recyclables};
-      landfillSimulated = (data.nonRecyclables["General Household Landfill"]||0);
+      manualSimulated = {...data.recyclables};
+      binsState = { orange: 0 };
+      landfillSimulated = data.nonRecyclables["General Household Landfill"];
 
       document.querySelectorAll('.simulated-value').forEach(el=>{
         const type = el.getAttribute('data-type');
-        const base = data.nonRecyclables[type]||0;
+        const base = data.nonRecyclables[type];
         el.textContent = (type==="General Household Landfill"?landfillSimulated:base).toFixed(2);
       });
+      Object.keys(data.recyclables).forEach(writeFinalIntoInput);
+      document.querySelectorAll('.bins-count-input').forEach(inp=>{ inp.value = 0; });
 
-      document.querySelectorAll('#recyclablesTable tr').forEach((row,idx)=>{
-        const material = Object.keys(data.recyclables)[idx];
-        const input = row.querySelector('input.simulated-input');
-        if(input) input.value = simulatedValues[material].toFixed(2);
+      // לאפס גם את תא הטון הפוטנציאלי (חוזר ל-0)
+      document.querySelectorAll('.bin-potential').forEach(cell=>{
+        cell.textContent = '0';
       });
 
-      setButtonsAvailability(); updateSummary(); toggleCostHint();
+      setButtonsAvailability(); updateSummary();
     }
   </script>
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=kevincivix/muniwaste" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
