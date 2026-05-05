@@ -15,157 +15,251 @@
     .hint-link{cursor:pointer;text-decoration:underline}
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-  <div class="container mx-auto px-4 py-8">
+<body class="bg-slate-50 min-h-screen">
 
-    <!-- Header with logos -->
-    <div class="flex items-center justify-center gap-60 mb-4">
-      <img src="https://i.postimg.cc/fRh195Zp/Civix-Logo-01.png" alt="לוגו צוותי חדשנות נגב מזרחי" class="h-16">
-      <img src="https://i.postimg.cc/FFd6CwHw/Asset-3-2x.png" alt="לוגו Civix" class="h-16">
+  <!-- Alert -->
+  <div id="alertBox" class="alert-box fixed top-4 left-1/2 -translate-x-1/2 max-w-md w-full bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl shadow-lg hidden z-50">
+    <div class="flex items-center gap-3">
+      <i class="fas fa-exclamation-circle text-red-400"></i>
+      <p id="alertMessage" class="text-sm flex-1">לא ניתן להגדיל מיחזור</p>
+      <button id="closeAlert" class="text-red-300 hover:text-red-500 mr-auto"><i class="fas fa-times"></i></button>
     </div>
+  </div>
 
-    <h1 class="text-3xl font-bold text-center text-black mb-8">סימולטור ניהול פסולת - רשויות נגב מזרחי</h1>
-
-    <!-- Controls -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-      <div>
-        <label for="municipality" class="block text-sm font-medium text-gray-700 mb-1">בחר/י רשות מקומית</label>
-        <select id="municipality" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
-          <option value="">בחר/י רשות</option>
-          <option value="Kuseife">כסייפה</option>
-          <option value="Yeruham">ירוחם</option>
-          <option value="Mitzpe Ramon">מצפה רמון</option>
-          <option value="Central Arava">ערבה תיכונה</option>
-          <option value="Dimona">דימונה</option>
-          <option value="Hura">חורה</option>
-          <option value="Arad">ערד</option>
-          <option value="Al-Kasom">אל קסום</option>
-          <option value="Segev Shalom">שגב שלום</option>
-          <option value="Neve Midbar">נווה מדבר</option>
-          <option value="Tel Sheva">תל שבע</option>
-          <option value="Ramat Negev">רמת נגב</option>
-        </select>
-      </div>
-      <div>
-        <label for="costPerTon" class="block text-sm font-medium text-gray-700 mb-1">עלות להטמנת טון פסולת (₪)</label>
-        <input type="number" id="costPerTon" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" placeholder="הקלד/י עלות לטון">
-      </div>
-    </div>
-
-    <!-- Alert -->
-    <div id="alertBox" class="alert-box fixed top-4 left-4 max-w-md bg-red-100 border-r-4 border-red-500 text-red-700 p-4 rounded shadow-lg hidden">
-      <div class="flex items-center">
-        <div class="flex-shrink-0"><i class="fas fa-exclamation-circle text-red-500"></i></div>
-        <div class="mr-3">
-          <p id="alertMessage" class="text-sm">לא ניתן להגדיל מיחזור – אין עוד פסולת להטמנה שאפשר להמיר.</p>
+  <!-- Header -->
+  <header class="bg-gradient-to-l from-green-900 to-green-800 text-white shadow-md">
+    <div class="container mx-auto px-6 py-5">
+      <div class="flex items-center justify-between gap-4 flex-wrap">
+        <div class="flex items-center gap-5">
+          <img src="https://i.postimg.cc/fRh195Zp/Civix-Logo-01.png" alt="לוגו" class="h-11 brightness-0 invert opacity-90">
+          <img src="https://i.postimg.cc/FFd6CwHw/Asset-3-2x.png" alt="לוגו Civix" class="h-11 brightness-0 invert opacity-90">
         </div>
-        <div class="ml-auto pr-3">
-          <button id="closeAlert" class="text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+        <div class="text-right">
+          <h1 class="text-xl font-bold tracking-tight">סימולטור ניהול פסולת</h1>
+          <p class="text-green-300 text-sm mt-0.5">רשויות נגב מזרחי</p>
         </div>
       </div>
     </div>
+  </header>
 
-    <!-- Layout -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-      <!-- עמודה 1: פסולת מופרדת במקור -->
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold text-green-700 mb-4">פסולת מופרדת במקור</h2>
+  <!-- Sticky Controls -->
+  <div class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-40">
+    <div class="container mx-auto px-6 py-3">
+      <div class="flex items-end gap-4 flex-wrap">
+        <div class="flex-1 min-w-44">
+          <label for="municipality" class="block text-xs font-medium text-gray-400 mb-1">רשות מקומית</label>
+          <select id="municipality" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+            <option value="">בחר/י רשות...</option>
+            <option value="Kuseife">כסייפה</option>
+            <option value="Yeruham">ירוחם</option>
+            <option value="Mitzpe Ramon">מצפה רמון</option>
+            <option value="Central Arava">ערבה תיכונה</option>
+            <option value="Dimona">דימונה</option>
+            <option value="Hura">חורה</option>
+            <option value="Arad">ערד</option>
+            <option value="Al-Kasom">אל קסום</option>
+            <option value="Segev Shalom">שגב שלום</option>
+            <option value="Neve Midbar">נווה מדבר</option>
+            <option value="Tel Sheva">תל שבע</option>
+            <option value="Ramat Negev">רמת נגב</option>
+          </select>
+        </div>
+        <div class="flex-1 min-w-44">
+          <label for="costPerTon" class="block text-xs font-medium text-gray-400 mb-1">
+            עלות הטמנה לטון (₪)
+            <span id="costHint" class="text-blue-400 hint-link mr-1">(למה זה חשוב?)</span>
+          </label>
+          <div class="relative">
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm font-medium">₪</span>
+            <input type="number" id="costPerTon" class="w-full pr-7 pl-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" placeholder="0">
+          </div>
+        </div>
+        <button id="resetButton" class="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-lg text-sm font-medium transition-all whitespace-nowrap">
+          <i class="fas fa-redo text-xs"></i> איפוס
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mx-auto px-6 py-6 space-y-5">
+
+    <!-- Recycling Rate Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div class="flex items-center gap-2 mb-5">
+        <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+          <i class="fas fa-recycle text-green-600 text-sm"></i>
+        </div>
+        <h2 class="text-sm font-semibold text-gray-700">שיעור מיחזור</h2>
+        <span class="text-xs text-gray-300 mr-auto">פסולת מופרדת מתוך סה״כ פסולת</span>
+      </div>
+
+      <div class="flex items-center gap-8 mb-6 flex-wrap">
+        <div>
+          <p class="text-xs text-gray-400 mb-1">מקור</p>
+          <p id="recyclingRateOriginal" class="text-3xl font-bold text-gray-400">—</p>
+        </div>
+        <div class="text-gray-200 text-2xl leading-none">←</div>
+        <div>
+          <p class="text-xs text-gray-400 mb-1">סימולציה</p>
+          <p id="recyclingRateSimulated" class="text-4xl font-bold text-green-600">—</p>
+        </div>
+        <div id="recyclingRateDelta" class="text-base font-semibold"></div>
+      </div>
+
+      <div class="space-y-3">
+        <div class="flex items-center gap-2 text-xs text-blue-400 font-medium">
+          <div class="w-px h-3.5 bg-blue-400"></div>
+          <span>ממוצע ארצי (21%) — דוח המשרד להגנת הסביבה 2021</span>
+        </div>
+        <div class="pt-5">
+          <div class="flex justify-between text-xs text-gray-400 mb-1.5">
+            <span>מקור</span>
+            <span id="recyclingRateOriginalLabel">—</span>
+          </div>
+          <div class="relative w-full bg-gray-100 rounded-full h-3">
+            <div id="recyclingRateOriginalBar" class="bg-gray-300 h-3 rounded-full transition-all duration-500" style="width:0%"></div>
+            <div class="absolute top-0 h-full" style="left:21%">
+              <div class="w-px h-full bg-blue-400"></div>
+              <div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 text-xs text-blue-400 whitespace-nowrap font-semibold">21%</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs text-gray-400 mb-1.5">
+            <span>סימולציה</span>
+            <span id="recyclingRateSimulatedLabel">—</span>
+          </div>
+          <div class="relative w-full bg-gray-100 rounded-full h-3">
+            <div id="recyclingRateSimulatedBar" class="bg-green-500 h-3 rounded-full transition-all duration-500" style="width:0%"></div>
+            <div class="absolute top-0 h-full w-px bg-blue-400" style="left:21%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+        <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center mb-3">
+          <i class="fas fa-weight-hanging text-slate-400 text-xs"></i>
+        </div>
+        <p class="text-xs text-gray-400">סה״כ פסולת</p>
+        <p id="totalWasteOriginal" class="text-2xl font-bold text-gray-800 mt-1">0</p>
+        <p class="text-xs text-gray-300 mt-0.5">טון</p>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+        <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center mb-3">
+          <i class="fas fa-leaf text-green-500 text-xs"></i>
+        </div>
+        <p class="text-xs text-gray-400">פסולת ממוחזרת</p>
+        <p id="recycledOriginal" class="text-xs text-gray-300 mt-2">מקור: 0</p>
+        <p id="recycledSimulated" class="text-xl font-bold text-green-600 mt-0.5">סימולציה: 0</p>
+        <p class="text-xs text-gray-300 mt-0.5">טון</p>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+        <div class="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center mb-3">
+          <i class="fas fa-trash text-orange-400 text-xs"></i>
+        </div>
+        <p class="text-xs text-gray-400">לא ממוחזרת</p>
+        <p id="nonRecycledOriginal" class="text-xs text-gray-300 mt-2">מקור: 0</p>
+        <p id="nonRecycledSimulated" class="text-xl font-bold text-orange-500 mt-0.5">סימולציה: 0</p>
+        <p class="text-xs text-gray-300 mt-0.5">טון</p>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+        <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mb-3">
+          <i class="fas fa-shekel-sign text-blue-500 text-xs"></i>
+        </div>
+        <p class="text-xs text-gray-400">חיסכון מוערך</p>
+        <p id="originalCost" class="text-xs text-gray-300 mt-2">עלות מקורית: ₪0</p>
+        <p id="simulatedCost" class="text-xs text-gray-300">עלות סימולציה: ₪0</p>
+        <p id="estimatedSavings" class="text-xl font-bold text-green-600 mt-0.5">₪0</p>
+      </div>
+
+    </div>
+
+    <p class="text-xs text-gray-300">כל הנתונים מבוססים על דו"ח טופס 1 — כמויות פסולת ומיחזור שנתי של הרשות המקומית (המשרד להגנת הסביבה).</p>
+
+    <!-- Data Tables -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+      <!-- Recyclables -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center">
+            <i class="fas fa-recycle text-green-600 text-xs"></i>
+          </div>
+          <h2 class="text-sm font-semibold text-gray-700">פסולת מופרדת במקור</h2>
+        </div>
         <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">חומר</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">מקור (טון)</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סימולציה (טון)</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">פעולות</th>
+          <table class="min-w-full">
+            <thead>
+              <tr class="bg-gray-50 border-b border-gray-100">
+                <th class="px-5 py-3 text-right text-xs font-medium text-gray-400">חומר</th>
+                <th class="px-5 py-3 text-right text-xs font-medium text-gray-400">מקור (טון)</th>
+                <th class="px-5 py-3 text-right text-xs font-medium text-gray-400">תוספת בסימולציה (טון)</th>
+                <th class="px-5 py-3"></th>
               </tr>
             </thead>
-            <tbody id="recyclablesTable" class="bg-white divide-y divide-gray-200"></tbody>
+            <tbody id="recyclablesTable" class="divide-y divide-gray-50"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- עמודה 2: שני קלפים מוערמים -->
-      <div class="flex flex-col gap-6">
-        <!-- פסולת לא ממוחזרת -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
-          <h2 class="text-xl font-semibold text-green-700 mb-4">פסולת לא ממוחזרת</h2>
+      <!-- Right column -->
+      <div class="flex flex-col gap-5">
+
+        <!-- Non-recyclables -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center">
+              <i class="fas fa-trash-alt text-orange-500 text-xs"></i>
+            </div>
+            <h2 class="text-sm font-semibold text-gray-700">פסולת לא ממוחזרת</h2>
+          </div>
           <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סוג</th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">מקור (טון)</th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סימולציה (טון)</th>
+            <table class="min-w-full">
+              <thead>
+                <tr class="bg-gray-50 border-b border-gray-100">
+                  <th class="px-5 py-3 text-right text-xs font-medium text-gray-400">סוג</th>
+                  <th class="px-5 py-3 text-right text-xs font-medium text-gray-400">מקור (טון)</th>
+                  <th class="px-5 py-3 text-right text-xs font-medium text-gray-400">סימולציה (טון)</th>
                 </tr>
               </thead>
-              <tbody id="nonRecyclablesTable" class="bg-white divide-y divide-gray-200"></tbody>
+              <tbody id="nonRecyclablesTable" class="divide-y divide-gray-50"></tbody>
             </table>
           </div>
         </div>
 
-        <!-- חישוב מחזור פוטנציאל לפי סוג פח -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
-          <h2 class="text-xl font-semibold text-green-700 mb-4">חישוב מחזור פוטנציאל לפי סוג פח</h2>
+        <!-- Bins -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center">
+              <i class="fas fa-dumpster text-amber-500 text-xs"></i>
+            </div>
+            <h2 class="text-sm font-semibold text-gray-700">חישוב מחזור פוטנציאל לפי סוג פח</h2>
+          </div>
           <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סוג פח</th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">טון פוטנציאלי</th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">מספר פחים</th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">פעולות</th>
+            <table class="min-w-full">
+              <thead>
+                <tr class="bg-gray-50 border-b border-gray-100">
+                  <th class="px-5 py-3 text-right text-xs font-medium text-gray-400">סוג פח</th>
+                  <th class="px-5 py-3 text-right text-xs font-medium text-gray-400">טון פוטנציאלי</th>
+                  <th class="px-5 py-3 text-right text-xs font-medium text-gray-400">מספר פחים</th>
+                  <th class="px-5 py-3"></th>
                 </tr>
               </thead>
-              <tbody id="binsTable" class="bg-white divide-y divide-gray-200"></tbody>
+              <tbody id="binsTable" class="divide-y divide-gray-50"></tbody>
             </table>
           </div>
         </div>
+
       </div>
     </div>
 
-    <!-- Summary -->
-    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-      <h2 class="text-xl font-semibold text-green-700 mb-4">סיכום</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-gray-50 p-4 rounded-lg">
-          <h3 class="text-sm font-medium text-gray-500">סה״כ פסולת (מקור)</h3>
-          <p id="totalWasteOriginal" class="text-2xl font-bold text-gray-800">0</p>
-          <p class="text-sm text-gray-500">טון</p>
-        </div>
-        <div class="bg-gray-50 p-4 rounded-lg">
-          <h3 class="text-sm font-medium text-gray-500">פסולת ממוחזרת</h3>
-          <p id="recycledOriginal" class="text-lg text-gray-600">מקור: 0</p>
-          <p id="recycledSimulated" class="text-lg text-green-600 font-bold">סימולציה: 0</p>
-          <p class="text-sm text-gray-500">טון</p>
-        </div>
-        <div class="bg-gray-50 p-4 rounded-lg">
-          <h3 class="text-sm font-medium text-gray-500">פסולת לא ממוחזרת</h3>
-          <p id="nonRecycledOriginal" class="text-lg text-gray-600">מקור: 0</p>
-          <p id="nonRecycledSimulated" class="text-lg text-green-600 font-bold">סימולציה: 0</p>
-          <p class="text-sm text-gray-500">טון</p>
-        </div>
-        <div class="bg-gray-50 p-4 rounded-lg">
-          <h3 class="text-sm font-medium text-gray-500">
-            חיסכון מוערך
-            <span id="costHint" class="text-xs text-blue-600 hint-link">(להפעלת הסימולציה יש למלא עלות לטון)</span>
-          </h3>
-          <p id="originalCost" class="text-sm text-gray-600">עלות מקורית: ₪0</p>
-          <p id="simulatedCost" class="text-sm text-gray-600">עלות בסימולציה: ₪0</p>
-          <p id="estimatedSavings" class="text-xl font-bold text-green-600">₪0</p>
-        </div>
-      </div>
-      <p class="mt-4 text-xs text-gray-500">
-        כל הנתונים מבוססים על פי דו"ח (טופס 1) — כמויות פסולת ומִחזור שנתי של הרשות המקומית (המשרד להגנת הסביבה).
-      </p>
-    </div>
-
-    <!-- Reset -->
-    <div class="flex justify-center">
-      <button id="resetButton" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
-        <i class="fas fa-redo ml-2"></i>איפוס סימולציה
-      </button>
-    </div>
   </div>
 
   <script>
@@ -243,7 +337,7 @@
 
     // --- Helpers ---
     function formatNumber(n){return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-    function formatPotential(n){return n===0 ? '0' : n.toFixed(3)} // עבור טון פוטנציאלי: 0 ואז מצטבר ב־0.855
+    function formatPotential(n){return n===0 ? '0' : n.toFixed(3)}
     function showAlert(msg){alertMessage.textContent=msg;alertBox.classList.remove('hidden');alertBox.classList.add('show');setTimeout(hideAlert,5000)}
     function hideAlert(){alertBox.classList.remove('show');alertBox.classList.add('hidden')}
     function syncLandfillCell(){const c=document.querySelector('.simulated-value[data-type="General Household Landfill"]'); if(c) c.textContent=landfillSimulated.toFixed(2)}
@@ -270,7 +364,11 @@
     }
     function writeFinalIntoInput(materialKey){
       const input = document.querySelector(`input.simulated-input[data-material="${CSS.escape(materialKey)}"]`);
-      if(input){ input.value = getFinalSimulatedFor(materialKey).toFixed(2); }
+      if(input){
+        const base = (currentMunicipality ? municipalities[currentMunicipality].recyclables[materialKey] : 0) || 0;
+        const delta = getFinalSimulatedFor(materialKey) - base;
+        input.value = Math.max(0, delta).toFixed(2);
+      }
     }
     function updateBinPotentialCell(binId){
       const cfg = binsConfig.find(b=>b.id===binId);
@@ -299,27 +397,28 @@
       recyclablesTable.innerHTML = '';
       Object.entries(data.recyclables).forEach(([material, value])=>{
         const isSpecial = (material==="Paper" || material==="Cardboard");
+        const isZero = value === 0;
         const label = labelsRecyclables[material] || material;
         const row = document.createElement('tr');
-        row.className = 'hover:bg-gray-50';
+        row.className = isZero ? 'bg-amber-50 hover:bg-amber-100' : 'hover:bg-gray-50';
         row.innerHTML = `
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 relative group">
-            ${label}${isSpecial ? `<span class="ml-1 text-red-500">*</span>
-              <div class="absolute right-full top-1/2 -translate-y-1/2 mr-2 w-56 bg-black text-white text-xs rounded py-1 px-2 hidden group-hover:block z-10">
+          <td class="px-5 py-3 text-sm text-gray-700 relative group">
+            ${label}${isSpecial ? `<span class="mr-1.5 text-xs font-semibold text-amber-500 bg-amber-100 px-1.5 py-0.5 rounded">×10%</span>
+              <div class="absolute top-full right-0 mt-1 w-56 bg-gray-800 text-white text-xs rounded-lg py-2 px-3 hidden group-hover:block z-10 shadow-lg">
                 נייר וקרטון מזכים ב־10% חיסכון בלבד לטון
               </div>` : ``}
           </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatNumber(value)}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">
-            <input type="number" class="w-24 px-2 py-1 border border-gray-300 rounded simulated-input" data-material="${material}" value="${(value).toFixed(2)}">
+          <td class="px-5 py-3 text-sm text-gray-400 tabular-nums">${formatNumber(value)}</td>
+          <td class="px-5 py-3">
+            <input type="number" class="w-24 px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm simulated-input focus:ring-2 focus:ring-green-400 focus:border-green-400 bg-white transition-all" data-material="${material}" value="0.00" placeholder="0">
           </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            <div class="flex items-center space-x-2 space-x-reverse">
-              <button class="decrease-btn px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200" data-material="${material}">
-                <i class="fas fa-minus"></i>
+          <td class="px-5 py-3">
+            <div class="flex items-center gap-1">
+              <button class="decrease-btn w-7 h-7 flex items-center justify-center rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-all" data-material="${material}">
+                <i class="fas fa-minus text-xs"></i>
               </button>
-              <button class="increase-btn px-2 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200" data-material="${material}">
-                <i class="fas fa-plus"></i>
+              <button class="increase-btn w-7 h-7 flex items-center justify-center rounded-full bg-green-50 text-green-500 hover:bg-green-100 hover:text-green-700 transition-all" data-material="${material}">
+                <i class="fas fa-plus text-xs"></i>
               </button>
             </div>
           </td>`;
@@ -336,9 +435,9 @@
         row.className = 'hover:bg-gray-50';
         const simVal = (type==="General Household Landfill" ? landfillSimulated : val);
         row.innerHTML = `
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${labelsNonRecyclables[type] || type}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${val.toFixed(2)}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold simulated-value" data-type="${type}">${simVal.toFixed(2)}</td>`;
+          <td class="px-5 py-3 text-sm text-gray-700">${labelsNonRecyclables[type] || type}</td>
+          <td class="px-5 py-3 text-sm text-gray-400 tabular-nums">${val.toFixed(2)}</td>
+          <td class="px-5 py-3 text-sm font-semibold text-orange-500 tabular-nums simulated-value" data-type="${type}">${simVal.toFixed(2)}</td>`;
         nonRecyclablesTable.appendChild(row);
       });
 
@@ -361,28 +460,27 @@
         const currentCount = binsState[cfg.id]||0;
         const currentPotential = currentCount * cfg.tonPerBin;
 
-        // הוספת tooltip על "פח כתום"
         const labelWithTooltip = `
           <span class="relative group cursor-default">
             ${cfg.label}
-            <div class="absolute right-full top-1/2 -translate-y-1/2 mr-2 w-72 bg-black text-white text-xs rounded py-2 px-3 hidden group-hover:block z-20">
+            <div class="absolute top-full right-0 mt-1 w-72 bg-gray-800 text-white text-xs rounded-lg py-2 px-3 hidden group-hover:block z-20 shadow-lg">
               כל פח כתום מהווה 0.855 טון חסכון בשנה על פי ממוצע ארצי בשנת 2021 - תאגיד תמיר
             </div>
           </span>`;
 
         row.innerHTML = `
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${labelWithTooltip}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold bin-potential" data-binid="${cfg.id}">${formatPotential(currentPotential)}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">
-            <input type="number" min="${cfg.min}" step="${cfg.step}" class="w-24 px-2 py-1 border border-gray-300 rounded bins-count-input" data-binid="${cfg.id}" value="${currentCount}">
+          <td class="px-5 py-3 text-sm text-gray-700">${labelWithTooltip}</td>
+          <td class="px-5 py-3 text-sm font-semibold text-amber-600 tabular-nums bin-potential" data-binid="${cfg.id}">${formatPotential(currentPotential)}</td>
+          <td class="px-5 py-3">
+            <input type="number" min="${cfg.min}" step="${cfg.step}" class="w-24 px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bins-count-input focus:ring-2 focus:ring-amber-400 focus:border-amber-400 bg-white transition-all" data-binid="${cfg.id}" value="${currentCount}">
           </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            <div class="flex items-center space-x-2 space-x-reverse">
-              <button class="bin-decrease-btn px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200" data-binid="${cfg.id}">
-                <i class="fas fa-minus"></i>
+          <td class="px-5 py-3">
+            <div class="flex items-center gap-1">
+              <button class="bin-decrease-btn w-7 h-7 flex items-center justify-center rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-all" data-binid="${cfg.id}">
+                <i class="fas fa-minus text-xs"></i>
               </button>
-              <button class="bin-increase-btn px-2 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200" data-binid="${cfg.id}">
-                <i class="fas fa-plus"></i>
+              <button class="bin-increase-btn w-7 h-7 flex items-center justify-center rounded-full bg-amber-50 text-amber-500 hover:bg-amber-100 hover:text-amber-700 transition-all" data-binid="${cfg.id}">
+                <i class="fas fa-plus text-xs"></i>
               </button>
             </div>
           </td>`;
@@ -447,13 +545,9 @@
         if(input) input.value = newCount;
       }
 
-      // עדכון תא "טון פוטנציאלי" המצטבר
       updateBinPotentialCell(binId);
-
-      // עדכון פסולת מופרדת במקור עבור החומר הייעודי
       const targetKey = cfg.targetMaterialKey;
       writeFinalIntoInput(targetKey);
-
       syncLandfillCell();
       setButtonsAvailability();
       updateSummary();
@@ -470,41 +564,75 @@
     }
     function decreaseRecyclable(e){
       const material = e.target.getAttribute('data-material') || e.target.parentElement.getAttribute('data-material');
-      const finalNow = getFinalSimulatedFor(material);
-      if(finalNow<=0) return;
-      const contrib = computeBinsContributionByMaterial()[material]||0;
-      if(manualSimulated[material] > 0){
-        manualSimulated[material] = Math.max(0, manualSimulated[material]-1);
-        landfillSimulated += 1;
-      }else{
-        return;
-      }
+      const base = municipalities[currentMunicipality].recyclables[material] || 0;
+      if(manualSimulated[material] <= base) return;
+      manualSimulated[material] = Math.max(base, manualSimulated[material] - 1);
+      landfillSimulated += 1;
       writeFinalIntoInput(material);
       syncLandfillCell(); updateSummary(); setButtonsAvailability();
     }
     function updateSimulatedValue(e){
       const material = e.target.getAttribute('data-material');
+      const base = municipalities[currentMunicipality].recyclables[material] || 0;
       const oldFinal = getFinalSimulatedFor(material);
-      let desiredFinal = parseFloat(e.target.value);
-      if(isNaN(desiredFinal) || desiredFinal<0) desiredFinal = 0;
 
-      const contrib = computeBinsContributionByMaterial()[material]||0;
-      if(desiredFinal < contrib){ desiredFinal = contrib; }
+      let desiredDelta = parseFloat(e.target.value);
+      if(isNaN(desiredDelta) || desiredDelta < 0) desiredDelta = 0;
+
+      const contrib = computeBinsContributionByMaterial()[material] || 0;
+      let desiredFinal = base + desiredDelta;
+      if(desiredFinal < contrib) desiredFinal = contrib;
 
       const deltaFinal = desiredFinal - oldFinal;
-      if(deltaFinal>0){
+      if(deltaFinal > 0){
         if(landfillSimulated - deltaFinal < 0){
           showAlert("אין מספיק פסולת להטמנה כדי להמיר לערך המבוקש.");
           desiredFinal = oldFinal + landfillSimulated;
         }
         landfillSimulated -= (desiredFinal - oldFinal);
-        manualSimulated[material] = Math.max(0, (manualSimulated[material]||0) + (desiredFinal - oldFinal));
-      }else if(deltaFinal<0){
+        manualSimulated[material] = Math.max(base, (manualSimulated[material]||0) + (desiredFinal - oldFinal));
+      } else if(deltaFinal < 0){
         landfillSimulated += (oldFinal - desiredFinal);
-        manualSimulated[material] = Math.max(0, (manualSimulated[material]||0) - (oldFinal - desiredFinal));
+        manualSimulated[material] = Math.max(base, (manualSimulated[material]||0) - (oldFinal - desiredFinal));
       }
-      e.target.value = getFinalSimulatedFor(material).toFixed(2);
+      writeFinalIntoInput(material);
       syncLandfillCell(); updateSummary(); setButtonsAvailability();
+    }
+
+    // Recycling Rate
+    function updateRecyclingRate(){
+      if(!currentMunicipality) return;
+      const data = municipalities[currentMunicipality];
+
+      const originalRecycled = Object.values(data.recyclables).reduce((s,v)=>s+v,0);
+      let simulatedRecycled = 0;
+      Object.keys(data.recyclables).forEach(k=>{ simulatedRecycled += getFinalSimulatedFor(k); });
+
+      const total = data.totalWaste;
+      const originalRate = total > 0 ? (originalRecycled / total * 100) : 0;
+      const simulatedRate = total > 0 ? (simulatedRecycled / total * 100) : 0;
+      const delta = simulatedRate - originalRate;
+
+      document.getElementById('recyclingRateOriginal').textContent = originalRate.toFixed(1) + '%';
+      document.getElementById('recyclingRateSimulated').textContent = simulatedRate.toFixed(1) + '%';
+      document.getElementById('recyclingRateOriginalLabel').textContent = originalRate.toFixed(1) + '%';
+      document.getElementById('recyclingRateSimulatedLabel').textContent = simulatedRate.toFixed(1) + '%';
+      document.getElementById('recyclingRateOriginalBar').style.width = Math.min(originalRate, 100) + '%';
+      document.getElementById('recyclingRateSimulatedBar').style.width = Math.min(simulatedRate, 100) + '%';
+
+      const deltaEl = document.getElementById('recyclingRateDelta');
+      if(delta > 0.005){
+        deltaEl.textContent = '↑ +' + delta.toFixed(1) + '%';
+        deltaEl.className = 'text-base font-semibold text-green-600';
+        document.getElementById('recyclingRateSimulated').className = 'text-4xl font-bold text-green-600';
+      } else if(delta < -0.005){
+        deltaEl.textContent = '↓ ' + delta.toFixed(1) + '%';
+        deltaEl.className = 'text-base font-semibold text-red-500';
+        document.getElementById('recyclingRateSimulated').className = 'text-4xl font-bold text-red-500';
+      } else {
+        deltaEl.textContent = '';
+        document.getElementById('recyclingRateSimulated').className = 'text-4xl font-bold text-gray-600';
+      }
     }
 
     // Summary & Costs
@@ -526,6 +654,7 @@
       nonRecycledOriginal.textContent = `מקור: ${formatNumber(originalNonRecycled)}`;
       nonRecycledSimulated.textContent = `סימולציה: ${formatNumber(simulatedNonRecycled)}`;
 
+      updateRecyclingRate();
       updateCostCalculations();
     }
 
@@ -553,9 +682,9 @@
       simulatedCost.textContent = `עלות בסימולציה: ₪${formatNumber(simulatedCostValue)}`;
       estimatedSavings.textContent = `₪${formatNumber(totalSavingsCurrency)}`;
 
-      if(totalSavingsCurrency>0){estimatedSavings.classList.remove('text-red-600');estimatedSavings.classList.add('text-green-600');}
-      else if(totalSavingsCurrency<0){estimatedSavings.classList.remove('text-green-600');estimatedSavings.classList.add('text-red-600');}
-      else{estimatedSavings.classList.remove('text-green-600','text-red-600');}
+      if(totalSavingsCurrency>0){estimatedSavings.classList.remove('text-red-500');estimatedSavings.classList.add('text-green-600');}
+      else if(totalSavingsCurrency<0){estimatedSavings.classList.remove('text-green-600');estimatedSavings.classList.add('text-red-500');}
+      else{estimatedSavings.classList.remove('text-green-600','text-red-500');}
     }
 
     // Reset
@@ -574,14 +703,10 @@
       });
       Object.keys(data.recyclables).forEach(writeFinalIntoInput);
       document.querySelectorAll('.bins-count-input').forEach(inp=>{ inp.value = 0; });
-
-      // לאפס גם את תא הטון הפוטנציאלי (חוזר ל-0)
-      document.querySelectorAll('.bin-potential').forEach(cell=>{
-        cell.textContent = '0';
-      });
+      document.querySelectorAll('.bin-potential').forEach(cell=>{ cell.textContent = '0'; });
 
       setButtonsAvailability(); updateSummary();
     }
   </script>
-<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=kevincivix/muniwaste" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</body>
 </html>
