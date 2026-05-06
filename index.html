@@ -13,6 +13,11 @@
     input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
     input[type="number"]{-moz-appearance:textfield}
     .hint-link{cursor:pointer;text-decoration:underline}
+    @media print {
+      body > *:not(#printContent) { display: none !important; }
+      #printContent { display: block !important; }
+      @page { margin: 15mm; size: A4; }
+    }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -67,13 +72,24 @@
         <div class="flex-1 min-w-44">
           <label for="costPerTon" class="block text-xs font-medium text-gray-400 mb-1">
             עלות הטמנה לטון (₪)
-            <span id="costHint" class="text-blue-400 hint-link mr-1">(למה זה חשוב?)</span>
+            <span class="relative group inline-block mr-1 cursor-help">
+              <span id="costHint" class="text-blue-400 text-xs">(למה זה חשוב?)</span>
+              <div class="hidden group-hover:block absolute top-full right-0 mt-1.5 w-64 bg-gray-800 text-white text-xs rounded-xl p-3 shadow-xl z-50 leading-relaxed font-normal pointer-events-none" style="white-space:normal;">
+                הכנסת עלות ההטמנה לטון מאפשרת לחשב את <span class="text-green-300 font-semibold">העלויות והחיסכון הכספי</span> בסימולציה — כמה כסף תחסוך הרשות על כל טון שעובר ממיחזור במקום הטמנה.
+              </div>
+            </span>
           </label>
           <div class="relative">
             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm font-medium">₪</span>
             <input type="number" id="costPerTon" class="w-full pr-7 pl-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" placeholder="0">
           </div>
         </div>
+        <button id="editSourceButton" class="hidden items-center gap-1.5 px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-sm font-medium transition-all whitespace-nowrap border border-green-200">
+          <i class="fas fa-pen text-xs"></i> ערוך נתוני מקור
+        </button>
+        <button id="downloadPdfButton" class="hidden items-center gap-1.5 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-sm font-medium transition-all whitespace-nowrap border border-blue-200">
+          <i class="fas fa-file-pdf text-xs"></i> הורד PDF
+        </button>
         <button id="resetButton" class="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-lg text-sm font-medium transition-all whitespace-nowrap">
           <i class="fas fa-redo text-xs"></i> איפוס
         </button>
@@ -262,6 +278,35 @@
 
   </div>
 
+  <!-- Print Content -->
+  <div id="printContent" style="display:none;font-family:Arial,Helvetica,sans-serif;direction:rtl;color:#111827;"></div>
+
+  <!-- Edit Source Modal -->
+  <div id="editModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-start justify-center overflow-y-auto py-8 px-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl my-auto">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center">
+            <i class="fas fa-pen text-green-600 text-xs"></i>
+          </div>
+          <h2 class="text-sm font-semibold text-gray-700">עריכת נתוני מקור</h2>
+          <span id="editModalTitle" class="text-xs text-gray-400 mr-1"></span>
+        </div>
+        <button id="editModalClose" class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-all">
+          <i class="fas fa-times text-xs"></i>
+        </button>
+      </div>
+      <div id="editModalContent" class="px-6 py-5 max-h-[65vh] overflow-y-auto space-y-6"></div>
+      <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100">
+        <p class="text-xs text-gray-400"><i class="fas fa-info-circle ml-1"></i>השינויים חלים על הסשן הנוכחי בלבד</p>
+        <div class="flex gap-3">
+          <button id="editModalCancel" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-sm font-medium transition-all">ביטול</button>
+          <button id="editModalSave" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all">שמור שינויים</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // --- Data ---
     const municipalities = {
@@ -333,7 +378,6 @@
     costPerTonInput.addEventListener('input', updateCostCalculations);
     resetButton.addEventListener('click', resetSimulation);
     closeAlert.addEventListener('click', hideAlert);
-    costHint.addEventListener('click', () => { costPerTonInput.scrollIntoView({behavior:'smooth', block:'center'}); costPerTonInput.focus(); });
 
     // --- Helpers ---
     function formatNumber(n){return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
@@ -448,6 +492,11 @@
       Object.keys(data.recyclables).forEach(writeFinalIntoInput);
 
       totalWasteOriginal.textContent = data.totalWaste.toFixed(2);
+      editSourceButton.classList.remove('hidden');
+      editSourceButton.classList.add('flex');
+      const dlBtn = document.getElementById('downloadPdfButton');
+      dlBtn.classList.remove('hidden');
+      dlBtn.classList.add('flex');
       setButtonsAvailability();
       updateSummary();
     }
@@ -685,6 +734,273 @@
       if(totalSavingsCurrency>0){estimatedSavings.classList.remove('text-red-500');estimatedSavings.classList.add('text-green-600');}
       else if(totalSavingsCurrency<0){estimatedSavings.classList.remove('text-green-600');estimatedSavings.classList.add('text-red-500');}
       else{estimatedSavings.classList.remove('text-green-600','text-red-500');}
+    }
+
+    // PDF Export
+    document.getElementById('downloadPdfButton').addEventListener('click', downloadPDF);
+
+    function downloadPDF(){
+      if(!currentMunicipality) return;
+      document.getElementById('printContent').innerHTML = buildPDFContent();
+      window.print();
+    }
+
+    function buildPDFContent(){
+      const data = municipalities[currentMunicipality];
+      const municipalityLabel = municipalitySelect.options[municipalitySelect.selectedIndex].text;
+      const today = new Date().toLocaleDateString('he-IL',{year:'numeric',month:'long',day:'numeric'});
+
+      const originalRecycled = Object.values(data.recyclables).reduce((s,v)=>s+v,0);
+      let simulatedRecycled = 0;
+      Object.keys(data.recyclables).forEach(k=>{ simulatedRecycled += getFinalSimulatedFor(k); });
+      const originalNonRecycled = Object.values(data.nonRecyclables).reduce((s,v)=>s+v,0);
+      const simulatedNonRecycled = landfillSimulated + data.nonRecyclables["General Bulky Landfill"] + (data.nonRecyclables["Prunings Sent to Landfill"]||0);
+      const originalRate = data.totalWaste > 0 ? (originalRecycled / data.totalWaste * 100) : 0;
+      const simulatedRate = data.totalWaste > 0 ? (simulatedRecycled / data.totalWaste * 100) : 0;
+      const costPerTonVal = parseFloat(costPerTonInput.value) || 0;
+
+      let weightedSavingsTons = 0;
+      for(const material in data.recyclables){
+        const base = data.recyclables[material]||0;
+        const fin = getFinalSimulatedFor(material);
+        const factor = (material in savingsFactor) ? savingsFactor[material] : savingsFactor.default;
+        weightedSavingsTons += (fin - base) * factor;
+      }
+      const totalSavings = weightedSavingsTons * costPerTonVal;
+
+      // Recyclables rows — only materials with source > 0 or simulation delta > 0
+      let recRows = '';
+      Object.entries(data.recyclables).forEach(([material, value])=>{
+        const simTotal = getFinalSimulatedFor(material);
+        const delta = simTotal - value;
+        if(value > 0 || delta > 0){
+          const isSpecial = material==="Paper" || material==="Cardboard";
+          const deltaColor = delta > 0 ? '#16a34a' : '#6b7280';
+          recRows += `<tr>
+            <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#374151;">${labelsRecyclables[material]||material}${isSpecial?` <span style="font-size:10px;color:#f59e0b;">×10%</span>`:''}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#6b7280;text-align:left;">${formatNumber(value)}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:${deltaColor};text-align:left;font-weight:${delta>0?'bold':'normal'};">+${formatNumber(Math.max(0,delta))}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#111827;text-align:left;font-weight:bold;">${formatNumber(simTotal)}</td>
+          </tr>`;
+        }
+      });
+
+      // Non-recyclables rows
+      let nonRecRows = '';
+      Object.entries(data.nonRecyclables).forEach(([type, val])=>{
+        const simVal = type==="General Household Landfill" ? landfillSimulated : val;
+        nonRecRows += `<tr>
+          <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#374151;">${labelsNonRecyclables[type]||type}</td>
+          <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#6b7280;text-align:left;">${val.toFixed(2)}</td>
+          <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#f97316;text-align:left;font-weight:bold;">${simVal.toFixed(2)}</td>
+        </tr>`;
+      });
+
+      // Bins section (only if bins added)
+      let binsSection = '';
+      const activeBins = binsConfig.filter(cfg=>(binsState[cfg.id]||0)>0);
+      if(activeBins.length){
+        let binsRows = activeBins.map(cfg=>`<tr>
+          <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#374151;">${cfg.label}</td>
+          <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#6b7280;text-align:left;">${binsState[cfg.id]}</td>
+          <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#d97706;text-align:left;font-weight:bold;">${formatPotential(binsState[cfg.id]*cfg.tonPerBin)} טון</td>
+        </tr>`).join('');
+        binsSection = `
+          <div style="margin-bottom:24px;">
+            <div style="font-size:13px;font-weight:bold;color:#374151;padding-bottom:8px;border-bottom:2px solid #fde68a;margin-bottom:12px;">פחי מחזור בסימולציה</div>
+            <table style="width:100%;border-collapse:collapse;">
+              <thead><tr style="background:#fffbeb;">
+                <th style="padding:7px 10px;text-align:right;font-size:11px;color:#92400e;border-bottom:1px solid #fde68a;">סוג פח</th>
+                <th style="padding:7px 10px;text-align:left;font-size:11px;color:#92400e;border-bottom:1px solid #fde68a;">מספר פחים</th>
+                <th style="padding:7px 10px;text-align:left;font-size:11px;color:#92400e;border-bottom:1px solid #fde68a;">טון פוטנציאלי</th>
+              </tr></thead>
+              <tbody>${binsRows}</tbody>
+            </table>
+          </div>`;
+      }
+
+      const deltaRate = simulatedRate - originalRate;
+      const deltaTag = deltaRate > 0.005
+        ? `<span style="background:#dcfce7;color:#166534;font-size:13px;font-weight:bold;padding:5px 12px;border-radius:8px;margin-right:16px;">↑ +${deltaRate.toFixed(1)}%</span>` : '';
+
+      return `
+        <div style="background:linear-gradient(to left,#14532d,#166534);padding:22px 28px;border-radius:12px;margin-bottom:24px;">
+          <div style="color:white;font-size:19px;font-weight:bold;">סימולטור ניהול פסולת</div>
+          <div style="color:#86efac;font-size:12px;margin-top:3px;">רשויות נגב מזרחי</div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;">
+          <div style="font-size:11px;color:#9ca3af;">${today}</div>
+          <div><span style="font-size:12px;color:#6b7280;">רשות מקומית: </span><span style="font-size:17px;font-weight:bold;color:#111827;">${municipalityLabel}</span></div>
+        </div>
+
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:18px 20px;margin-bottom:22px;">
+          <div style="font-size:12px;font-weight:600;color:#166534;margin-bottom:14px;">שיעור מיחזור</div>
+          <div style="display:flex;align-items:center;gap:24px;margin-bottom:14px;">
+            <div><div style="font-size:11px;color:#6b7280;margin-bottom:3px;">מקור</div><div style="font-size:26px;font-weight:bold;color:#6b7280;">${originalRate.toFixed(1)}%</div></div>
+            <div style="color:#d1d5db;font-size:20px;">←</div>
+            <div><div style="font-size:11px;color:#6b7280;margin-bottom:3px;">סימולציה</div><div style="font-size:34px;font-weight:bold;color:#16a34a;">${simulatedRate.toFixed(1)}%</div></div>
+            ${deltaTag}
+          </div>
+          <div style="margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;margin-bottom:3px;"><span>מקור</span><span>${originalRate.toFixed(1)}%</span></div>
+            <div style="background:#e5e7eb;border-radius:99px;height:9px;position:relative;">
+              <div style="background:#9ca3af;height:9px;border-radius:99px;width:${Math.min(originalRate,100)}%;"></div>
+              <div style="position:absolute;top:0;height:100%;width:1px;background:#3b82f6;left:21%;"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;margin-bottom:3px;"><span>סימולציה</span><span>${simulatedRate.toFixed(1)}%</span></div>
+            <div style="background:#e5e7eb;border-radius:99px;height:9px;position:relative;">
+              <div style="background:#16a34a;height:9px;border-radius:99px;width:${Math.min(simulatedRate,100)}%;"></div>
+              <div style="position:absolute;top:0;height:100%;width:1px;background:#3b82f6;left:21%;"></div>
+            </div>
+          </div>
+          <div style="margin-top:6px;font-size:10px;color:#60a5fa;">| ממוצע ארצי 21% — דוח המשרד להגנת הסביבה 2021</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;">
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;">
+            <div style="font-size:10px;color:#94a3b8;margin-bottom:3px;">סה״כ פסולת</div>
+            <div style="font-size:18px;font-weight:bold;color:#1e293b;">${formatNumber(data.totalWaste)}</div>
+            <div style="font-size:10px;color:#cbd5e1;">טון</div>
+          </div>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px;">
+            <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">ממוחזרת (מקור)</div>
+            <div style="font-size:13px;color:#9ca3af;">${formatNumber(originalRecycled)}</div>
+            <div style="font-size:10px;color:#6b7280;margin-top:4px;">סימולציה</div>
+            <div style="font-size:18px;font-weight:bold;color:#16a34a;">${formatNumber(simulatedRecycled)}</div>
+            <div style="font-size:10px;color:#cbd5e1;">טון</div>
+          </div>
+          <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px;">
+            <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">להטמנה (מקור)</div>
+            <div style="font-size:13px;color:#9ca3af;">${formatNumber(originalNonRecycled)}</div>
+            <div style="font-size:10px;color:#6b7280;margin-top:4px;">סימולציה</div>
+            <div style="font-size:18px;font-weight:bold;color:#f97316;">${formatNumber(simulatedNonRecycled)}</div>
+            <div style="font-size:10px;color:#cbd5e1;">טון</div>
+          </div>
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;">
+            <div style="font-size:10px;color:#6b7280;margin-bottom:3px;">חיסכון מוערך</div>
+            ${costPerTonVal>0
+              ? `<div style="font-size:18px;font-weight:bold;color:${totalSavings>=0?'#16a34a':'#ef4444'};">₪${formatNumber(totalSavings)}</div>`
+              : `<div style="font-size:11px;color:#9ca3af;">לא הוזנה עלות לטון</div>`}
+          </div>
+        </div>
+
+        <div style="margin-bottom:22px;">
+          <div style="font-size:13px;font-weight:bold;color:#374151;padding-bottom:8px;border-bottom:2px solid #dcfce7;margin-bottom:12px;">פסולת מופרדת במקור</div>
+          <table style="width:100%;border-collapse:collapse;">
+            <thead><tr style="background:#f0fdf4;">
+              <th style="padding:7px 10px;text-align:right;font-size:11px;color:#166534;border-bottom:1px solid #bbf7d0;">חומר</th>
+              <th style="padding:7px 10px;text-align:left;font-size:11px;color:#166534;border-bottom:1px solid #bbf7d0;">מקור (טון)</th>
+              <th style="padding:7px 10px;text-align:left;font-size:11px;color:#166534;border-bottom:1px solid #bbf7d0;">תוספת</th>
+              <th style="padding:7px 10px;text-align:left;font-size:11px;color:#166534;border-bottom:1px solid #bbf7d0;">סה"כ סימולציה</th>
+            </tr></thead>
+            <tbody>${recRows}</tbody>
+          </table>
+        </div>
+
+        <div style="margin-bottom:22px;">
+          <div style="font-size:13px;font-weight:bold;color:#374151;padding-bottom:8px;border-bottom:2px solid #fed7aa;margin-bottom:12px;">פסולת לא ממוחזרת</div>
+          <table style="width:100%;border-collapse:collapse;">
+            <thead><tr style="background:#fff7ed;">
+              <th style="padding:7px 10px;text-align:right;font-size:11px;color:#9a3412;border-bottom:1px solid #fed7aa;">סוג</th>
+              <th style="padding:7px 10px;text-align:left;font-size:11px;color:#9a3412;border-bottom:1px solid #fed7aa;">מקור (טון)</th>
+              <th style="padding:7px 10px;text-align:left;font-size:11px;color:#9a3412;border-bottom:1px solid #fed7aa;">סימולציה (טון)</th>
+            </tr></thead>
+            <tbody>${nonRecRows}</tbody>
+          </table>
+        </div>
+
+        ${binsSection}
+
+        <div style="border-top:1px solid #e5e7eb;padding-top:10px;font-size:10px;color:#9ca3af;text-align:right;">
+          כל הנתונים מבוססים על דו"ח טופס 1 — כמויות פסולת ומיחזור שנתי של הרשות המקומית (המשרד להגנת הסביבה) | הופק: ${today}
+        </div>`;
+    }
+
+    // Edit Source Modal
+    const editModal = document.getElementById('editModal');
+    const editSourceButton = document.getElementById('editSourceButton');
+    editSourceButton.addEventListener('click', openEditModal);
+    document.getElementById('editModalClose').addEventListener('click', closeEditModal);
+    document.getElementById('editModalCancel').addEventListener('click', closeEditModal);
+    document.getElementById('editModalSave').addEventListener('click', saveEditModal);
+    editModal.addEventListener('click', (e) => { if(e.target === editModal) closeEditModal(); });
+
+    function openEditModal(){
+      if(!currentMunicipality) return;
+      const data = municipalities[currentMunicipality];
+      document.getElementById('editModalTitle').textContent = '— ' + municipalitySelect.options[municipalitySelect.selectedIndex].text;
+
+      const content = document.getElementById('editModalContent');
+      content.innerHTML = '';
+
+      // Recyclables
+      const recSection = document.createElement('div');
+      recSection.innerHTML = '<h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">פסולת מופרדת במקור</h3>';
+      const recGrid = document.createElement('div');
+      recGrid.className = 'space-y-2';
+      Object.entries(data.recyclables).forEach(([material, value]) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between gap-4';
+        row.innerHTML = `
+          <label class="text-sm text-gray-600 flex-1">${labelsRecyclables[material] || material}</label>
+          <input type="number" min="0" step="0.001"
+            class="w-32 px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-400 focus:border-green-400 bg-gray-50 focus:bg-white transition-all"
+            data-edit-material="${material}" value="${value}">`;
+        recGrid.appendChild(row);
+      });
+      recSection.appendChild(recGrid);
+      content.appendChild(recSection);
+
+      const divider = document.createElement('hr');
+      divider.className = 'border-gray-100';
+      content.appendChild(divider);
+
+      // Non-recyclables
+      const nonRecSection = document.createElement('div');
+      nonRecSection.innerHTML = '<h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">פסולת לא ממוחזרת</h3>';
+      const nonRecGrid = document.createElement('div');
+      nonRecGrid.className = 'space-y-2';
+      Object.entries(data.nonRecyclables).forEach(([type, value]) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between gap-4';
+        row.innerHTML = `
+          <label class="text-sm text-gray-600 flex-1">${labelsNonRecyclables[type] || type}</label>
+          <input type="number" min="0" step="0.001"
+            class="w-32 px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 bg-gray-50 focus:bg-white transition-all"
+            data-edit-nonrec="${type}" value="${value}">`;
+        nonRecGrid.appendChild(row);
+      });
+      nonRecSection.appendChild(nonRecGrid);
+      content.appendChild(nonRecSection);
+
+      editModal.classList.remove('hidden');
+    }
+
+    function closeEditModal(){
+      editModal.classList.add('hidden');
+    }
+
+    function saveEditModal(){
+      if(!currentMunicipality) return;
+      const data = municipalities[currentMunicipality];
+
+      document.querySelectorAll('[data-edit-material]').forEach(input => {
+        const val = parseFloat(input.value);
+        data.recyclables[input.getAttribute('data-edit-material')] = isNaN(val) || val < 0 ? 0 : val;
+      });
+      document.querySelectorAll('[data-edit-nonrec]').forEach(input => {
+        const val = parseFloat(input.value);
+        data.nonRecyclables[input.getAttribute('data-edit-nonrec')] = isNaN(val) || val < 0 ? 0 : val;
+      });
+
+      data.totalWaste = Object.values(data.recyclables).reduce((s,v)=>s+v,0)
+                      + Object.values(data.nonRecyclables).reduce((s,v)=>s+v,0);
+
+      closeEditModal();
+      loadMunicipalityData();
     }
 
     // Reset
