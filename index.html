@@ -258,23 +258,23 @@
         </div>
 
         <!-- Metric cards -->
-        <div class="flex gap-2.5 flex-wrap items-center">
-          <div class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 min-w-[92px]">
-            <div class="text-[10px] text-gray-400">סה״כ פסולת</div>
-            <div class="mt-0.5"><span id="totalWasteOriginal" class="text-base font-bold text-gray-800">0</span> <span class="text-[10px] text-gray-300">טון</span></div>
+        <div class="flex-1 min-w-[460px] grid grid-cols-4 gap-2.5 items-stretch">
+          <div class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 h-full flex flex-col justify-center">
+            <div class="text-xs font-medium text-gray-500 mb-0.5">סה״כ פסולת</div>
+            <div><span id="totalWasteOriginal" class="text-base font-bold text-gray-800">0</span> <span class="text-[10px] text-gray-300">טון</span></div>
           </div>
-          <div class="px-3 py-2 rounded-xl bg-green-50 border border-green-100 min-w-[110px]">
-            <div class="text-[10px] text-gray-500 mb-0.5">פסולת ממוחזרת</div>
+          <div class="px-3 py-2 rounded-xl bg-green-50 border border-green-100 h-full flex flex-col justify-center">
+            <div class="text-xs font-medium text-gray-500 mb-0.5">פסולת ממוחזרת</div>
             <div id="recycledSimulated" class="text-sm font-bold text-green-600">סימולציה: 0</div>
             <div id="recycledOriginal" class="text-[10px] text-gray-400">מקור: 0</div>
           </div>
-          <div class="px-3 py-2 rounded-xl bg-orange-50 border border-orange-100 min-w-[110px]">
-            <div class="text-[10px] text-gray-500 mb-0.5">לא ממוחזרת</div>
+          <div class="px-3 py-2 rounded-xl bg-orange-50 border border-orange-100 h-full flex flex-col justify-center">
+            <div class="text-xs font-medium text-gray-500 mb-0.5">לא ממוחזרת</div>
             <div id="nonRecycledSimulated" class="text-sm font-bold text-orange-500">סימולציה: 0</div>
             <div id="nonRecycledOriginal" class="text-[10px] text-gray-400">מקור: 0</div>
           </div>
-          <div class="px-3 py-2 rounded-xl bg-blue-50 border border-blue-100 min-w-[124px]">
-            <div class="text-[10px] text-gray-500 mb-0.5">חיסכון מוערך</div>
+          <div class="px-3 py-2 rounded-xl bg-blue-50 border border-blue-100 h-full flex flex-col justify-center">
+            <div class="text-xs font-medium text-gray-500 mb-0.5">חיסכון מוערך</div>
             <div id="estimatedSavings" class="text-base font-bold text-green-600">₪0</div>
             <div id="originalCost" class="text-[10px] text-gray-400">עלות מקורית: ₪0</div>
             <div id="simulatedCost" class="text-[10px] text-gray-400">עלות סימולציה: ₪0</div>
