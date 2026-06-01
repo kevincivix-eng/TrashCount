@@ -47,7 +47,7 @@
         </div>
         <div class="text-right">
           <h1 id="headerTitle" class="text-xl font-bold tracking-tight">סימולטור ניהול פסולת</h1>
-          <p id="headerSubtitle" class="text-green-300 text-sm mt-0.5">רשויות נגב מזרחי</p>
+          <p id="headerSubtitle" class="text-green-300 text-sm mt-0.5">רשויות נגב מזרחי<sup class="text-[9px] opacity-60 mr-0.5">*</sup></p>
         </div>
       </div>
     </div>
@@ -141,7 +141,7 @@
 
   <div class="container mx-auto px-6 py-6 pb-72 space-y-5">
 
-    <p id="footnote" class="text-xs text-gray-300">כל הנתונים מבוססים על דו"ח טופס 1 — כמויות פסולת ומיחזור שנתי של הרשות המקומית (המשרד להגנת הסביבה).</p>
+    <p id="footnote" class="text-[11px] text-gray-300">* כל הנתונים מבוססים על דוחות טופס 1 לשנת 2023 — כמויות פסולת ומיחזור שנתי של הרשות המקומית (המשרד להגנת הסביבה).</p>
 
     <!-- Data Tables -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -505,7 +505,7 @@
         downloadPdfButtonText: 'הורד PDF',
         resetButtonText: 'איפוס',
         infoLine: 'לחצ/י על <span class="font-semibold text-green-600">אייקון הסימולציה</span> בכל שורה כדי להזין תוספת ולהריץ סימולציה.',
-        footnote: 'כל הנתונים מבוססים על דו"ח טופס 1 — כמויות פסולת ומיחזור שנתי של הרשות המקומית (המשרד להגנת הסביבה).',
+        footnote: '* כל הנתונים מבוססים על דוחות טופס 1 לשנת 2023 — כמויות פסולת ומיחזור שנתי של הרשות המקומית (המשרד להגנת הסביבה).',
         recyclablesTitle: 'פסולת מופרדת במקור',
         nonRecyclablesTitle: 'פסולת לא ממוחזרת',
         binsTitle: 'חישוב מחזור פוטנציאל לפי סוג פח',
@@ -560,7 +560,7 @@
         downloadPdfButtonText: 'Download PDF',
         resetButtonText: 'Reset',
         infoLine: 'Click the <span class="font-semibold text-green-600">simulation icon</span> on each row to enter an addition and run the simulation.',
-        footnote: 'All data is based on Form 1 reports — annual waste and recycling quantities of the local authority (Ministry of Environmental Protection).',
+        footnote: '* All data is based on Form 1 reports (2023) — annual waste and recycling quantities of the local authority (Ministry of Environmental Protection).',
         recyclablesTitle: 'Source-Separated Waste',
         nonRecyclablesTitle: 'Non-Recycled Waste',
         binsTitle: 'Recycling Potential by Bin Type',
@@ -610,7 +610,7 @@
       const setText = (id, val) => { const el=g(id); if(el) el.textContent=val; };
       const setHtml = (id, val) => { const el=g(id); if(el) el.innerHTML=val; };
       setText('headerTitle', s.siteTitle);
-      setText('headerSubtitle', s.siteSubtitle);
+      setHtml('headerSubtitle', s.siteSubtitle + '<sup class="text-[9px] opacity-60 mr-0.5">*</sup>');
       setText('homeTitle', s.homeTitle);
       setText('homeDesc', s.homeDesc);
       setText('labelMunicipality', s.labelMunicipality);
@@ -1423,7 +1423,7 @@
         ${binsSection}
 
         <div style="border-top:1px solid #e5e7eb;padding-top:10px;font-size:10px;color:#9ca3af;text-align:right;">
-          כל הנתונים מבוססים על דו"ח טופס 1 — כמויות פסולת ומיחזור שנתי של הרשות המקומית (המשרד להגנת הסביבה) | הופק: ${today}
+          * כל הנתונים מבוססים על דוחות טופס 1 לשנת 2023 — כמויות פסולת ומיחזור שנתי של הרשות המקומית (המשרד להגנת הסביבה) | הופק: ${today}
         </div>`;
     }
 
