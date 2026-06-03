@@ -1,10 +1,12 @@
 <!DOCTYPE html>
+<!-- TrashCount / muniwaste — Beta 0.3.0 -->
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>סימולטור ניהול פסולת</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
     .alert-box{opacity:0;transition:opacity .3s ease-in-out}
@@ -94,10 +96,12 @@
               </div>
             </span>
           </label>
-          <div class="relative">
+          <div class="relative group">
             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm font-medium">₪</span>
             <input type="number" id="costPerTon" class="w-full pr-7 pl-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" placeholder="0">
+            <div id="costValueTooltip" class="hidden group-hover:block absolute top-full left-0 mt-1.5 w-72 bg-gray-800 text-white text-xs rounded-xl p-3 shadow-xl z-50 leading-relaxed font-normal pointer-events-none" style="white-space:normal;">העלות המשוכללת לטון כוללת את <span class="text-green-300 font-semibold">כל העלויות</span> שהרשות/הקבלן משלמים על הטמנת טון פסולת: היטל הטמנה, אגרת/עלות ההטמנה באתר (טיפול), הובלה ושינוע, ועלויות תפעול נוספות.</div>
           </div>
+          <p id="costComposeNote" class="mt-1.5 text-[11px] text-gray-400 leading-relaxed">הזינו עלות <b>משוכללת</b> לטון — היא כוללת גם את <b>היטל ההטמנה</b> וגם את עלויות ה<b>שינוע, הטיפול והוצאות נוספות</b> שיש לרשות בכל הטמנה.</p>
         </div>
 
         <button id="startButton" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-all">
@@ -120,6 +124,10 @@
             <span id="dataMunicipalityName" class="text-base font-bold text-gray-800">—</span>
             <span id="dataCostDisplay" class="text-xs text-gray-400"></span>
           </div>
+          <div id="viewToggle" class="flex items-center bg-slate-100 rounded-lg p-0.5">
+            <button id="viewSimBtn" class="px-3 py-1.5 rounded-md bg-white shadow-sm text-slate-700 text-sm font-medium transition-all">סימולציה</button>
+            <button id="viewDashBtn" class="px-3 py-1.5 rounded-md text-slate-500 hover:text-slate-700 text-sm font-medium transition-all">דשבורד</button>
+          </div>
           <div class="flex items-center gap-2 mr-auto flex-wrap">
             <button id="editSourceButton" class="hidden items-center gap-1.5 px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-sm font-medium transition-all whitespace-nowrap border border-green-200">
               <i class="fas fa-pen text-xs"></i> <span id="editSourceButtonText">ערוך נתוני מקור</span>
@@ -139,6 +147,7 @@
       </div>
     </div>
 
+  <div id="simView">
   <div class="container mx-auto px-6 py-6 pb-72 space-y-5">
 
     <p id="footnote" class="text-[11px] text-gray-300">* כל הנתונים מבוססים על דוחות טופס 1 לשנת 2023 — כמויות פסולת ומיחזור שנתי של הרשות המקומית (המשרד להגנת הסביבה).</p>
@@ -290,9 +299,171 @@
       </div>
     </div>
   </div>
+  </div>
+  <!-- end #simView -->
+
+  <!-- ===== DASHBOARD VIEW ===== -->
+  <div id="dashboardView" class="hidden container mx-auto px-6 py-6 space-y-5">
+
+    <!-- Layer 1: waste stream management -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2 flex-wrap">
+        <div class="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center">
+          <i class="fas fa-layer-group text-emerald-600 text-xs"></i>
+        </div>
+        <h2 id="streamsTitle" class="text-sm font-semibold text-gray-700">ניהול זרמי פסולת — היכן ההזדמנות</h2>
+        <span id="streamsBadge" class="text-[10px] font-semibold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">הערכה</span>
+        <button id="streamsInfoBtn" class="text-gray-400 hover:text-blue-600 text-xs flex items-center gap-1"><i class="fas fa-circle-info"></i><span id="streamsInfoLabel">מידע נוסף</span></button>
+        <div class="flex items-center gap-2 mr-auto">
+          <button id="streamAllBtn" class="px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-700 text-xs font-medium transition-all">כל הזרמים</button>
+          <div class="flex items-center bg-slate-100 rounded-md p-0.5">
+            <button id="streamUnitPct" class="px-2 py-0.5 rounded bg-white shadow-sm text-slate-700 text-xs font-medium">%</button>
+            <button id="streamUnitTon" class="px-2 py-0.5 rounded text-slate-500 hover:text-slate-700 text-xs font-medium">טון</button>
+          </div>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-100">
+              <th id="thStream" class="px-5 py-3 text-start text-xs font-medium text-gray-400">זרם</th>
+              <th id="thStreamLandfill" class="px-5 py-3 text-start text-xs font-medium text-gray-400">בהטמנה (טון)</th>
+              <th id="thStreamDivertable" class="px-5 py-3 text-start text-xs font-medium text-gray-400">ניתן להסיט (טון)</th>
+              <th id="thStreamOpportunity" class="px-5 py-3 text-start text-xs font-medium text-gray-400">הזדמנות ₪/שנה</th>
+            </tr>
+          </thead>
+          <tbody id="streamsTable" class="divide-y divide-gray-50"></tbody>
+        </table>
+      </div>
+      <p id="streamsHint" class="text-[11px] text-gray-300 px-5 py-3">* פירוק זרם ההטמנה הביתי לפי אומדן הרכב פסולת תקני; לחצ/י על זרם כדי להזין אותו כיעד ההסטה במודל.</p>
+    </div>
+
+    <!-- Layer 2: multi-year economic model -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
+          <i class="fas fa-chart-line text-blue-600 text-xs"></i>
+        </div>
+        <h2 id="economicTitle" class="text-sm font-semibold text-gray-700">מודל כדאיות כלכלית רב-שנתי</h2>
+        <button id="economicInfoBtn" class="text-gray-400 hover:text-blue-600 text-xs flex items-center gap-1 mr-auto"><i class="fas fa-circle-info"></i><span id="economicInfoLabel">מידע נוסף</span></button>
+      </div>
+      <div class="p-5 grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+        <!-- inputs -->
+        <div class="space-y-3">
+          <div>
+            <label id="inpHorizonLabel" class="block text-xs font-medium text-gray-400 mb-1">אופק (שנים)</label>
+            <input id="inpHorizon" type="number" min="1" max="30" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+          </div>
+          <div>
+            <label id="inpBaseLevyLabel" class="block text-xs font-medium text-gray-400 mb-1">היטל הטמנה ₪/טון</label>
+            <input id="inpBaseLevy" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+          </div>
+          <div>
+            <label id="inpLevyRiseLabel" class="block text-xs font-medium text-gray-400 mb-1">עליית היטל לשנה (%)</label>
+            <input id="inpLevyRise" type="number" min="0" step="0.5" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+          </div>
+          <div>
+            <label id="inpDivertedLabel" class="block text-xs font-medium text-gray-400 mb-1">יעד הסטה (טון/שנה)</label>
+            <input id="inpDiverted" type="number" min="0" readonly class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500 tabular-nums cursor-not-allowed">
+          </div>
+          <div>
+            <label id="inpRampUpLabel" class="block text-xs font-medium text-gray-400 mb-1">שנות יישום (רמפ-אפ)</label>
+            <input id="inpRampUp" type="number" min="1" max="20" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+          </div>
+          <div>
+            <label id="inpInvestmentLabel" class="block text-xs font-medium text-gray-400 mb-1">עלות השקעה (₪)</label>
+            <input id="inpInvestment" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+          </div>
+          <div>
+            <label id="inpTreatmentLabel" class="block text-xs font-medium text-gray-400 mb-1">עלות מיחזור לטון מוסט (₪)</label>
+            <input id="inpTreatment" type="number" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+          </div>
+          <div>
+            <label id="inpPopGrowthLabel" class="block text-xs font-medium text-gray-400 mb-1">צמיחת אוכלוסייה לשנה (%)</label>
+            <input id="inpPopGrowth" type="number" min="0" step="0.5" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+          </div>
+          <p id="levyNote" class="text-[11px] text-gray-300">* היטל ההטמנה — לאימות מול הלוח הרשמי</p>
+          <p id="popGrowthNote" class="text-[11px] text-gray-300">* צמיחת האוכלוסייה מגדילה את כמות הפסולת הכוללת בכל שנה — גם המוטמנת וגם המוסטת למיחזור גדלות באותו שיעור, כך שאחוז המיחזור נשמר.</p>
+        </div>
+
+        <!-- KPIs + chart -->
+        <div class="lg:col-span-2 space-y-4">
+          <!-- Group 1: Opportunity potential -->
+          <div>
+            <div class="flex items-center gap-1.5 mb-1.5">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500"></span>
+              <span id="kpiGroupOppLabel" class="text-xs font-semibold text-gray-600">פוטנציאל ההזדמנות</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div class="px-3 py-2.5 rounded-xl bg-green-50 border border-green-100">
+                <div id="kpiCumulativeLabel" class="text-[11px] font-medium text-gray-500 mb-0.5">חיסכון מצטבר (נטו)</div>
+                <div id="kpiCumulativeVal" class="text-base font-bold text-green-600">₪0</div>
+              </div>
+              <div class="px-3 py-2.5 rounded-xl bg-green-50 border border-green-100">
+                <div id="kpiAnnualLabel" class="text-[11px] font-medium text-gray-500 mb-0.5">חיסכון שנתי ממוצע</div>
+                <div id="kpiAnnualVal" class="text-base font-bold text-gray-800">₪0</div>
+              </div>
+              <div class="px-3 py-2.5 rounded-xl bg-green-50 border border-green-100">
+                <div id="kpiPaybackLabel" class="text-[11px] font-medium text-gray-500 mb-0.5">שנת איזון</div>
+                <div id="kpiPaybackVal" class="text-base font-bold text-blue-600">—</div>
+              </div>
+              <div class="px-3 py-2.5 rounded-xl bg-green-50 border border-green-100">
+                <div id="kpiRoiLabel" class="text-[11px] font-medium text-gray-500 mb-0.5">החזר על השקעה</div>
+                <div id="kpiRoiVal" class="text-base font-bold text-amber-600">—</div>
+              </div>
+            </div>
+          </div>
+          <!-- Group 2: Simulation model -->
+          <div>
+            <div class="flex items-center gap-1.5 mb-1.5">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+              <span id="kpiGroupSimLabel" class="text-xs font-semibold text-gray-600">מודל הסימולציה</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div class="px-3 py-2.5 rounded-xl bg-indigo-50 border border-indigo-100">
+                <div id="kpiSimCumulativeLabel" class="text-[11px] font-medium text-gray-500 mb-0.5">חיסכון מצטבר (נטו)</div>
+                <div id="kpiSimVal" class="text-base font-bold text-indigo-600">₪0</div>
+              </div>
+              <div class="px-3 py-2.5 rounded-xl bg-indigo-50 border border-indigo-100">
+                <div id="kpiSimAnnualLabel" class="text-[11px] font-medium text-gray-500 mb-0.5">חיסכון שנתי ממוצע</div>
+                <div id="kpiSimAnnualVal" class="text-base font-bold text-gray-800">₪0</div>
+              </div>
+              <div class="px-3 py-2.5 rounded-xl bg-indigo-50 border border-indigo-100">
+                <div id="kpiSimPaybackLabel" class="text-[11px] font-medium text-gray-500 mb-0.5">שנת איזון</div>
+                <div id="kpiSimPaybackVal" class="text-base font-bold text-blue-600">—</div>
+              </div>
+              <div class="px-3 py-2.5 rounded-xl bg-indigo-50 border border-indigo-100">
+                <div id="kpiSimRoiLabel" class="text-[11px] font-medium text-gray-500 mb-0.5">החזר על השקעה</div>
+                <div id="kpiSimRoiVal" class="text-base font-bold text-amber-600">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="relative" style="height:300px">
+            <canvas id="multiYearChart"></canvas>
+          </div>
+          <p id="chartCaption" class="mt-2.5 text-[11px] text-gray-400 leading-relaxed text-start">הקו <b class="text-red-500">האדום</b> (המשך כרגיל) קבוע — אין בו הסטה. שינוי ערכים ב״ניהול זרמי פסולת״ מזיז את הקו <b class="text-emerald-500">הירוק</b> (תרחיש שיפור); השטח המוצלל ביניהם הוא החיסכון המצטבר.</p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+  <!-- end #dashboardView -->
 
   </div>
   <!-- end #dataScreen -->
+
+  <!-- Dashboard Info Modal -->
+  <div id="infoModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-y-auto">
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
+        <h3 id="infoModalTitle" class="text-sm font-bold text-gray-800">מידע</h3>
+        <button id="infoModalClose" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+      </div>
+      <div id="infoModalBody" class="p-5 text-sm text-gray-600 leading-relaxed space-y-2"></div>
+    </div>
+  </div>
 
   <!-- Print Content -->
   <div id="printContent" style="display:none;font-family:Arial,Helvetica,sans-serif;direction:rtl;color:#111827;"></div>
@@ -485,6 +656,34 @@
     ];
     let binsState = { orange: 0 };
 
+    // --- Dashboard: standard waste composition estimate (editable) ---
+    // share = fraction of the household-landfill stream; recovery = realistic capture fraction
+    const wasteComposition = {
+      "Organic":             { share:0.36, recovery:0.60, factorKey:"default" },
+      "Paper and Cardboard": { share:0.18, recovery:0.55, factorKey:"Cardboard" },
+      "Plastic":             { share:0.15, recovery:0.45, factorKey:"default" },
+      "Glass":               { share:0.03, recovery:0.50, factorKey:"default" },
+      "Metal":               { share:0.03, recovery:0.50, factorKey:"default" },
+      "Textile":             { share:0.05, recovery:0.40, factorKey:"default" },
+      "Other / Inert":       { share:0.20, recovery:0.00, factorKey:"default" },
+    };
+
+    const labelsStreams = {
+      he: { "Organic":"אורגני / חום", "Paper and Cardboard":"נייר וקרטון", "Plastic":"פלסטיק", "Glass":"זכוכית", "Metal":"מתכת", "Textile":"טקסטיל", "Other / Inert":"אחר / אינרטי" },
+      en: { "Organic":"Organic", "Paper and Cardboard":"Paper & Cardboard", "Plastic":"Plastic", "Glass":"Glass", "Metal":"Metal", "Textile":"Textile", "Other / Inert":"Other / Inert" }
+    };
+
+    // Multi-year economic model defaults (all editable in UI)
+    const economicDefaults = {
+      horizonYears: 10, baseLevyPerTon: 0, levyAnnualRise: 0.05,
+      rampUpYears: 3, investment: 0, treatmentCostPerTon: 0, populationGrowth: 0.02, divertedTonsTarget: null
+    };
+    let economicState = { ...economicDefaults };
+    let dashboardChart = null;
+    let selectedStream = null;      // null = all streams feed the model
+    let streamRecovery = {};        // per-stream recovery fraction (editable)
+    let streamEditMode = 'percent'; // 'percent' | 'tons'
+
     // --- i18n ---
     let currentLang = 'he';
 
@@ -497,6 +696,8 @@
         labelMunicipality: 'רשות מקומית',
         placeholderMunicipality: 'בחר/י רשות...',
         labelCost: 'עלות הטמנה לטון (₪)',
+        costComposeNote: 'הזינו עלות <b>משוכללת</b> לטון — היא כוללת גם את <b>היטל ההטמנה</b> וגם את עלויות ה<b>שינוע, הטיפול והוצאות נוספות</b> שיש לרשות בכל הטמנה.',
+        costValueTooltip: 'העלות המשוכללת לטון כוללת את <span class="text-green-300 font-semibold">כל העלויות</span> שהרשות/הקבלן משלמים על הטמנת טון פסולת: היטל הטמנה, אגרת/עלות ההטמנה באתר (טיפול), הובלה ושינוע, ועלויות תפעול נוספות.',
         costHintText: '(למה זה חשוב?)',
         costHintTooltip: 'הכנסת עלות ההטמנה לטון מאפשרת לחשב את <span class="text-green-300 font-semibold">העלויות והחיסכון הכספי</span> בסימולציה — כמה כסף תחסוך הרשות על כל טון שעובר ממיחזור במקום הטמנה.',
         startButtonText: 'הצג נתונים והתחל סימולציה',
@@ -539,6 +740,28 @@
         alertNoBins: 'אין מספיק פסולת להטמנה כדי להוסיף פחים נוספים.',
         binTooltip: 'כל פח כתום מהווה 0.855 טון חסכון בשנה על פי ממוצע ארצי בשנת 2021 - תאגיד תמיר',
         costDisplay: (c) => c > 0 ? `עלות הטמנה: ₪${formatNumber(c)} לטון` : 'לא הוזנה עלות הטמנה',
+        viewSim: 'סימולציה', viewDash: 'דשבורד',
+        streamsTitle: 'ניהול זרמי פסולת — היכן ההזדמנות', streamsBadge: 'הערכה',
+        streamsHint: '* פירוק זרם ההטמנה הביתי לפי אומדן הרכב פסולת תקני; לחצ/י על זרם כדי להזין אותו כיעד ההסטה במודל.',
+        thStream: 'זרם', thStreamLandfill: 'בהטמנה (טון)', thStreamDivertable: 'ניתן להסיט (טון)', thStreamOpportunity: 'הזדמנות ₪/שנה',
+        economicTitle: 'מודל כדאיות כלכלית רב-שנתי',
+        inpHorizonLabel: 'אופק (שנים)', inpBaseLevyLabel: 'היטל הטמנה ₪/טון', inpLevyRiseLabel: 'עליית היטל לשנה (%)',
+        inpDivertedLabel: 'יעד הסטה (טון/שנה)', inpRampUpLabel: 'שנות יישום (רמפ-אפ)', inpInvestmentLabel: 'עלות השקעה (₪)', inpTreatmentLabel: 'עלות מיחזור לטון מוסט (₪)',
+        inpPopGrowthLabel: 'צמיחת אוכלוסייה לשנה (%)', popGrowthNote: '* צמיחת האוכלוסייה מגדילה את כמות הפסולת הכוללת בכל שנה — גם המוטמנת וגם המוסטת למיחזור גדלות באותו שיעור, כך שאחוז המיחזור נשמר.',
+        levyNote: '* רכיב ההיטל מתוך מחיר השער — רק הוא מטפס עם השנים. לאימות מול הלוח הרשמי.',
+        kpiAnnualLabel: 'חיסכון שנתי ממוצע', kpiCumulativeLabel: 'חיסכון מצטבר (נטו)', kpiPaybackLabel: 'שנת איזון', kpiRoiLabel: 'החזר על השקעה',
+        kpiGroupOppLabel: 'פוטנציאל ההזדמנות', kpiGroupSimLabel: 'מודל הסימולציה',
+        kpiSimAnnualLabel: 'חיסכון שנתי ממוצע', kpiSimCumulativeLabel: 'חיסכון מצטבר (נטו)', kpiSimPaybackLabel: 'שנת איזון', kpiSimRoiLabel: 'החזר על השקעה',
+        chartStatusQuo: 'המשך כרגיל', chartImproved: 'תרחיש שיפור', chartSimImproved: 'לפי הסימולציה', chartXAxis: 'שנה',
+        chartTooltipTitle: (n)=> n === 1 ? 'לאחר שנה' : 'לאחר ' + n + ' שנים',
+        chartCaption: 'הקו <b class="text-red-500">האדום</b> (המשך כרגיל) קבוע — אין בו הסטה. שינוי ערכים ב״ניהול זרמי פסולת״ מזיז את הקו <b class="text-emerald-500">הירוק</b> (תרחיש שיפור); השטח המוצלל ביניהם הוא החיסכון המצטבר.',
+        paybackYearUnit: (y) => `שנה ${y}`, paybackNever: 'מעבר לאופק',
+        streamAllBtn: 'כל הזרמים', streamUnitPctLabel: '%', streamUnitTonLabel: 'טון',
+        streamsInfoLabel: 'מידע נוסף', economicInfoLabel: 'מידע נוסף', kpiSimLabel: 'חיסכון לפי הסימולציה',
+        streamsInfoTitle: 'איך מחושב — ניהול זרמי פסולת',
+        streamsInfoBody: '<p>הטבלה מפרקת את זרם <b>הפסולת הביתית להטמנה</b> של הרשות לפי אומדן הרכב פסולת תקני.</p><ul class="list-disc ms-5 space-y-1"><li><b>בהטמנה (טון)</b> = פסולת ביתית להטמנה × אחוז ההרכב של הזרם.</li><li><b>ניתן להסיט</b> = הכמות בהטמנה × שיעור ההיתכנות למיחזור — ניתן לעריכה באחוזים או בטון.</li><li><b>הזדמנות ₪/שנה</b> = ניתן להסיט × (עלות הטמנה + היטל) × מקדם חיסכון. נייר וקרטון מזכים ב-10% חיסכון בלבד.</li></ul><p class="mt-2">בחירת זרם מזינה אותו כיעד ההסטה במודל; ״כל הזרמים״ מחזיר לסכום הכולל.</p><p class="text-amber-600 mt-2">* אחוזי ההרכב הם הערכה תקנית וניתנים לכיול.</p>',
+        economicInfoTitle: 'איך מחושב — מודל הכדאיות',
+        economicInfoBody: '<p>המודל משווה עלות הטמנה <b>מצטברת</b> לאורך השנים בשלושה תרחישים:</p><ul class="list-disc ms-5 space-y-1"><li><b>המשך כרגיל</b> — ללא הסטה; העלות עולה כי <b>היטל ההטמנה</b> מטפס מדי שנה.</li><li><b>תרחיש שיפור</b> — הסטת היעד שנבחר בטבלת הזרמים, עם יישום הדרגתי (רמפ-אפ).</li><li><b>לפי הסימולציה</b> — הסטה בפועל לפי מה שהוזן בלשונית הסימולציה.</li></ul><ul class="list-disc ms-5 space-y-1 mt-2"><li>מחיר השער הוא מחיר משוקלל = טיפול + היטל. רק רכיב ההיטל מטפס: היטל בשנה t = היטל התחלתי × (1 + עליית היטל)^t, והטיפול נשאר קבוע.</li><li>עלות שנתית = (טון בהטמנה − טון מוסט) × מחיר שער + טון מוסט × עלות טיפול במיחזור.</li><li><b>שנת איזון</b> = השנה בה החיסכון המצטבר מכסה את ההשקעה.</li><li><b>החזר על השקעה</b> = חיסכון נטו ÷ עלות השקעה.</li></ul>',
         langToggleLabel: 'EN',
         backArrow: 'fa-arrow-right', startArrow: 'fa-arrow-left', rateArrow: '←',
         municipalityName: (opt) => opt.dataset.he || opt.value,
@@ -552,6 +775,8 @@
         labelMunicipality: 'Municipality',
         placeholderMunicipality: 'Select municipality...',
         labelCost: 'Landfill cost per ton (₪)',
+        costComposeNote: 'Enter a <b>blended</b> cost per ton — it includes both the <b>landfill levy</b> and the <b>hauling, treatment and other expenses</b> the municipality incurs on every landfilling.',
+        costValueTooltip: 'The blended cost per ton includes <span class="text-green-300 font-semibold">all costs</span> the municipality/contractor pays to landfill a ton of waste: landfill levy, the site gate/treatment fee, hauling and transport, and other operating costs.',
         costHintText: '(Why does this matter?)',
         costHintTooltip: 'Entering the landfill cost per ton lets the simulator calculate the <span class="text-green-300 font-semibold">financial costs and savings</span> — how much money the municipality saves for every ton diverted from landfill to recycling.',
         startButtonText: 'Show Data & Start Simulation',
@@ -594,6 +819,28 @@
         alertNoBins: 'Not enough landfill waste to add more bins.',
         binTooltip: 'Each orange bin represents 0.855 tons of savings per year based on the 2021 national average — Tamir Corporation',
         costDisplay: (c) => c > 0 ? `Landfill cost: ₪${formatNumber(c)} / ton` : 'No landfill cost entered',
+        viewSim: 'Simulation', viewDash: 'Dashboard',
+        streamsTitle: 'Waste Stream Management — Where the Opportunity Is', streamsBadge: 'Estimate',
+        streamsHint: '* The household-landfill stream is broken down by a standard waste-composition estimate; click a stream to load it as the diversion target in the model.',
+        thStream: 'Stream', thStreamLandfill: 'In Landfill (tons)', thStreamDivertable: 'Divertable (tons)', thStreamOpportunity: 'Opportunity ₪/yr',
+        economicTitle: 'Multi-Year Economic Viability Model',
+        inpHorizonLabel: 'Horizon (years)', inpBaseLevyLabel: 'Landfill levy ₪/ton', inpLevyRiseLabel: 'Levy rise per year (%)',
+        inpDivertedLabel: 'Diversion target (tons/yr)', inpRampUpLabel: 'Ramp-up years', inpInvestmentLabel: 'Investment cost (₪)', inpTreatmentLabel: 'Recycling cost per diverted ton (₪)',
+        inpPopGrowthLabel: 'Population growth per year (%)', popGrowthNote: '* Population growth increases total waste every year — both landfilled and diverted-to-recycling grow at the same rate, so the recycling share is preserved.',
+        levyNote: '* The levy component within the gate fee — only it rises over the years. To be verified against the official schedule.',
+        kpiAnnualLabel: 'Avg annual saving', kpiCumulativeLabel: 'Cumulative saving (net)', kpiPaybackLabel: 'Payback year', kpiRoiLabel: 'Return on investment',
+        kpiGroupOppLabel: 'Opportunity potential', kpiGroupSimLabel: 'Simulation model',
+        kpiSimAnnualLabel: 'Avg annual saving', kpiSimCumulativeLabel: 'Cumulative saving (net)', kpiSimPaybackLabel: 'Payback year', kpiSimRoiLabel: 'Return on investment',
+        chartStatusQuo: 'Status quo', chartImproved: 'Improved scenario', chartSimImproved: 'Per simulation', chartXAxis: 'Year',
+        chartTooltipTitle: (n)=> n === 1 ? 'After 1 year' : 'After ' + n + ' years',
+        chartCaption: 'The <b class="text-red-500">red</b> line (status quo) is fixed — no diversion. Changing values in “Waste-stream management” moves the <b class="text-emerald-500">green</b> line (improved scenario); the shaded area between them is the cumulative saving.',
+        paybackYearUnit: (y) => `Year ${y}`, paybackNever: 'Beyond horizon',
+        streamAllBtn: 'All streams', streamUnitPctLabel: '%', streamUnitTonLabel: 'tons',
+        streamsInfoLabel: 'More info', economicInfoLabel: 'More info', kpiSimLabel: 'Saving per simulation',
+        streamsInfoTitle: 'How it is calculated - Waste Streams',
+        streamsInfoBody: '<p>The table breaks down the household landfill waste of the municipality by a standard waste-composition estimate.</p><ul class="list-disc ms-5 space-y-1"><li><b>In Landfill (tons)</b> = household landfill waste × the stream composition share.</li><li><b>Divertable</b> = landfill amount × recovery feasibility — editable in percent or tons.</li><li><b>Opportunity ₪/yr</b> = divertable × (landfill cost + levy) × savings factor. Paper and cardboard yield only a 10% saving.</li></ul><p class="mt-2">Selecting a stream loads it as the diversion target in the model; "All streams" restores the total.</p><p class="text-amber-600 mt-2">* Composition shares are a standard estimate and can be calibrated.</p>',
+        economicInfoTitle: 'How it is calculated - Viability Model',
+        economicInfoBody: '<p>The model compares <b>cumulative</b> landfill cost over the years across three scenarios:</p><ul class="list-disc ms-5 space-y-1"><li><b>Status quo</b> — no diversion; cost rises because the <b>landfill levy</b> climbs every year.</li><li><b>Improved scenario</b> — diverting the target selected in the streams table, with gradual ramp-up.</li><li><b>Per simulation</b> — actual diversion based on what was entered in the Simulation tab.</li></ul><ul class="list-disc ms-5 space-y-1 mt-2"><li>The gate fee is a blended price = treatment + levy. Only the levy component rises: levy in year t = initial levy × (1 + levy rise)^t, while treatment stays flat.</li><li>Annual cost = (landfill tons − diverted tons) × gate fee + diverted tons × recycling treatment cost.</li><li><b>Payback year</b> = the year cumulative saving covers the investment.</li><li><b>ROI</b> = net saving ÷ investment cost.</li></ul>',
         langToggleLabel: 'עב׳',
         backArrow: 'fa-arrow-left', startArrow: 'fa-arrow-right', rateArrow: '→',
         municipalityName: (opt) => opt.value,
@@ -616,6 +863,9 @@
       setText('labelMunicipality', s.labelMunicipality);
       setText('placeholderMunicipality', s.placeholderMunicipality);
       setText('labelCost', s.labelCost);
+      setHtml('costComposeNote', s.costComposeNote);
+      setHtml('costValueTooltip', s.costValueTooltip);
+      setHtml('chartCaption', s.chartCaption);
       setText('costHint', s.costHintText);
       setHtml('costHintTooltip', s.costHintTooltip);
       setText('startButtonText', s.startButtonText);
@@ -658,6 +908,26 @@
       setText('editModalNote', s.editModalNote);
       setText('editModalCancelText', s.editModalCancel); setText('editModalSaveText', s.editModalSave);
       setText('langToggleLabel', s.langToggleLabel);
+      // Dashboard
+      setText('viewSimBtn', s.viewSim); setText('viewDashBtn', s.viewDash);
+      setText('streamsTitle', s.streamsTitle); setText('streamsBadge', s.streamsBadge);
+      setText('streamsHint', s.streamsHint);
+      setText('thStream', s.thStream); setText('thStreamLandfill', s.thStreamLandfill);
+      setText('thStreamDivertable', s.thStreamDivertable); setText('thStreamOpportunity', s.thStreamOpportunity);
+      setText('economicTitle', s.economicTitle);
+      setText('inpHorizonLabel', s.inpHorizonLabel); setText('inpBaseLevyLabel', s.inpBaseLevyLabel);
+      setText('inpLevyRiseLabel', s.inpLevyRiseLabel); setText('inpDivertedLabel', s.inpDivertedLabel);
+      setText('inpRampUpLabel', s.inpRampUpLabel); setText('inpInvestmentLabel', s.inpInvestmentLabel);
+      setText('inpTreatmentLabel', s.inpTreatmentLabel); setText('levyNote', s.levyNote);
+      setText('inpPopGrowthLabel', s.inpPopGrowthLabel); setText('popGrowthNote', s.popGrowthNote);
+      setText('kpiAnnualLabel', s.kpiAnnualLabel); setText('kpiCumulativeLabel', s.kpiCumulativeLabel);
+      setText('kpiPaybackLabel', s.kpiPaybackLabel); setText('kpiRoiLabel', s.kpiRoiLabel);
+      setText('kpiGroupOppLabel', s.kpiGroupOppLabel); setText('kpiGroupSimLabel', s.kpiGroupSimLabel);
+      setText('kpiSimCumulativeLabel', s.kpiSimCumulativeLabel); setText('kpiSimAnnualLabel', s.kpiSimAnnualLabel);
+      setText('kpiSimPaybackLabel', s.kpiSimPaybackLabel); setText('kpiSimRoiLabel', s.kpiSimRoiLabel);
+      setText('streamAllBtn', s.streamAllBtn);
+      setText('streamUnitPct', s.streamUnitPctLabel); setText('streamUnitTon', s.streamUnitTonLabel);
+      setText('streamsInfoLabel', s.streamsInfoLabel); setText('economicInfoLabel', s.economicInfoLabel);
       // Arrows
       const backArrow = g('backBtnArrow');
       if(backArrow){ backArrow.className = `fas ${s.backArrow} text-xs`; }
@@ -701,6 +971,7 @@
         // Refresh displayed municipality name
         const selOpt = municipalitySelect.options[municipalitySelect.selectedIndex];
         if(selOpt) dataMunicipalityName.textContent = strings[lang].municipalityName(selOpt);
+        refreshDashboard();
       }
     }
 
@@ -907,6 +1178,8 @@
       dlBtn.classList.add('flex');
       setButtonsAvailability();
       updateSummary();
+      initDashboardInputs();
+      switchView('sim');
     }
 
     function buildBinsTable(){
@@ -1240,6 +1513,299 @@
       else if(totalSavingsCurrency<0){estimatedSavings.classList.remove('text-green-600');estimatedSavings.classList.add('text-red-500');}
       else{estimatedSavings.classList.remove('text-green-600','text-red-500');}
     }
+
+    // ===== DASHBOARD =====
+    const activeViewBtn = 'px-3 py-1.5 rounded-md bg-white shadow-sm text-slate-700 text-sm font-medium transition-all';
+    const inactiveViewBtn = 'px-3 py-1.5 rounded-md text-slate-500 hover:text-slate-700 text-sm font-medium transition-all';
+
+    function switchView(view){
+      const sim = document.getElementById('simView');
+      const dash = document.getElementById('dashboardView');
+      const simBtn = document.getElementById('viewSimBtn');
+      const dashBtn = document.getElementById('viewDashBtn');
+      if(view === 'dash'){
+        sim.classList.add('hidden'); dash.classList.remove('hidden');
+        dashBtn.className = activeViewBtn; simBtn.className = inactiveViewBtn;
+        refreshDashboard();
+      } else {
+        dash.classList.add('hidden'); sim.classList.remove('hidden');
+        simBtn.className = activeViewBtn; dashBtn.className = inactiveViewBtn;
+      }
+      window.scrollTo(0,0);
+    }
+    document.getElementById('viewSimBtn').addEventListener('click', ()=>switchView('sim'));
+    document.getElementById('viewDashBtn').addEventListener('click', ()=>switchView('dash'));
+
+    function householdLandfillTons(){
+      return (municipalities[currentMunicipality].nonRecyclables["General Household Landfill"]) || 0;
+    }
+    function landfillTotalTons(){
+      return Object.values(municipalities[currentMunicipality].nonRecyclables).reduce((s,v)=>s+v,0);
+    }
+    function streamTons(key){ return householdLandfillTons() * wasteComposition[key].share; }
+    function streamRecoveryOf(key){ return (key in streamRecovery) ? streamRecovery[key] : wasteComposition[key].recovery; }
+    function streamDivertableTons(key){ return streamTons(key) * streamRecoveryOf(key); }
+    function streamOpportunity(key){
+      // Present-day annual opportunity = divertable tons x current gate fee (already blended treatment+levy) x saving factor.
+      const cost = parseFloat(costPerTonInput.value) || 0;
+      const c = wasteComposition[key];
+      const factor = (c.factorKey in savingsFactor) ? savingsFactor[c.factorKey] : savingsFactor.default;
+      return streamDivertableTons(key) * cost * factor;
+    }
+    function totalDivertableTons(){ let s=0; for(const k in wasteComposition) s += streamDivertableTons(k); return s; }
+    function modelTargetTons(){
+      if(selectedStream && (selectedStream in wasteComposition)) return streamDivertableTons(selectedStream);
+      return totalDivertableTons();
+    }
+    function simulatedDivertedTons(){
+      if(!currentMunicipality) return 0;
+      const data = municipalities[currentMunicipality];
+      let sim = 0; Object.keys(data.recyclables).forEach(k=>{ sim += getFinalSimulatedFor(k); });
+      const orig = Object.values(data.recyclables).reduce((s,v)=>s+v,0);
+      return Math.max(0, sim - orig);
+    }
+
+    function computeStreams(){
+      const rows = [];
+      for(const key in wasteComposition){
+        rows.push({ key, tons: streamTons(key), recovery: streamRecoveryOf(key), divertable: streamDivertableTons(key), opportunity: streamOpportunity(key) });
+      }
+      rows.sort((a,b)=>b.opportunity - a.opportunity);
+      return rows;
+    }
+
+    function updateStreamControls(){
+      const allBtn = document.getElementById('streamAllBtn');
+      if(allBtn) allBtn.className = 'px-2.5 py-1 rounded-md text-xs font-medium transition-all ' + (selectedStream === null ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500 hover:text-slate-700');
+      const pctBtn = document.getElementById('streamUnitPct');
+      const tonBtn = document.getElementById('streamUnitTon');
+      if(pctBtn && tonBtn){
+        const a = 'px-2 py-0.5 rounded bg-white shadow-sm text-slate-700 text-xs font-medium';
+        const i = 'px-2 py-0.5 rounded text-slate-500 hover:text-slate-700 text-xs font-medium';
+        pctBtn.className = streamEditMode === 'percent' ? a : i;
+        tonBtn.className = streamEditMode === 'tons' ? a : i;
+      }
+    }
+
+    function buildStreamDashboard(){
+      const tbody = document.getElementById('streamsTable');
+      if(!tbody) return;
+      const s = strings[currentLang];
+      const rows = computeStreams();
+      tbody.innerHTML = '';
+      rows.forEach(r=>{
+        const label = labelsStreams[currentLang][r.key] || r.key;
+        const isSel = selectedStream === r.key;
+        const pct = Math.round(r.recovery * 100);
+        const tr = document.createElement('tr');
+        tr.className = (isSel ? 'bg-emerald-50 ' : '') + (r.tons > 0 ? 'hover:bg-gray-50' : 'opacity-60');
+        let editCell;
+        if(r.tons <= 0){
+          editCell = `<span class="text-sm text-gray-300 tabular-nums">${formatNumber(r.divertable)}</span>`;
+        } else if(streamEditMode === 'percent'){
+          editCell = `<div class="flex items-center gap-1.5 flex-wrap">
+            <input type="number" min="0" max="100" value="${pct}" data-stream="${r.key}" class="stream-edit w-16 px-2 py-1 border border-gray-200 rounded-md text-sm tabular-nums focus:ring-2 focus:ring-green-500 focus:border-green-500">
+            <span class="text-[11px] text-gray-400">%</span>
+            <span class="stream-secondary text-[11px] text-gray-400 tabular-nums">= ${formatNumber(r.divertable)} ${s.cardTon}</span>
+          </div>`;
+        } else {
+          editCell = `<div class="flex items-center gap-1.5 flex-wrap">
+            <input type="number" min="0" max="${Math.round(r.tons)}" value="${Math.round(r.divertable)}" data-stream="${r.key}" class="stream-edit w-20 px-2 py-1 border border-gray-200 rounded-md text-sm tabular-nums focus:ring-2 focus:ring-green-500 focus:border-green-500">
+            <span class="text-[11px] text-gray-400">${s.cardTon}</span>
+            <span class="stream-secondary text-[11px] text-gray-400 tabular-nums">= ${pct}%</span>
+          </div>`;
+        }
+        tr.innerHTML = `
+          <td class="px-5 py-3 text-sm">
+            <button class="stream-select text-start hover:text-emerald-600 ${isSel ? 'text-emerald-600 font-semibold' : 'text-gray-700'}" data-stream="${r.key}">${label}</button>
+          </td>
+          <td class="px-5 py-3 text-sm text-gray-400 tabular-nums">${formatNumber(r.tons)}</td>
+          <td class="px-5 py-3">${editCell}</td>
+          <td class="px-5 py-3 text-sm font-bold text-blue-600 tabular-nums stream-opp">₪${formatNumber(r.opportunity)}</td>`;
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll('.stream-edit').forEach(inp=>{
+        inp.addEventListener('input', ()=>{
+          const key = inp.getAttribute('data-stream');
+          const tons = streamTons(key);
+          let rec;
+          if(streamEditMode === 'percent') rec = (parseFloat(inp.value) || 0) / 100;
+          else rec = tons > 0 ? (parseFloat(inp.value) || 0) / tons : 0;
+          streamRecovery[key] = Math.min(1, Math.max(0, rec));
+          const row = inp.closest('tr');
+          const sec = row.querySelector('.stream-secondary');
+          if(sec) sec.textContent = streamEditMode === 'percent'
+            ? `= ${formatNumber(streamDivertableTons(key))} ${strings[currentLang].cardTon}`
+            : `= ${Math.round(streamRecoveryOf(key) * 100)}%`;
+          const opp = row.querySelector('.stream-opp');
+          if(opp) opp.textContent = '₪' + formatNumber(streamOpportunity(key));
+          refreshModel();
+        });
+      });
+      tbody.querySelectorAll('.stream-select').forEach(btn=>{
+        btn.addEventListener('click', ()=>{ selectedStream = btn.getAttribute('data-stream'); updateStreamControls(); buildStreamDashboard(); refreshModel(); });
+      });
+      updateStreamControls();
+    }
+
+    function computeMultiYear(){
+      const H = Math.max(1, economicState.horizonYears|0);
+      const cost = parseFloat(costPerTonInput.value) || 0;
+      // The landfill gate fee (cost) is a blended price = treatment + levy.
+      // The levy is a COMPONENT of it that escalates over the years; the treatment part stays flat.
+      const baseLevy = Math.min(economicState.baseLevyPerTon || 0, cost);
+      const flatTreatment = Math.max(0, cost - baseLevy);
+      const rise = economicState.levyAnnualRise || 0;
+      const popGrowth = economicState.populationGrowth || 0;
+      const ramp = Math.max(1, economicState.rampUpYears|0);
+      const invest = economicState.investment || 0;
+      const treat = economicState.treatmentCostPerTon || 0;
+      const landfill = landfillTotalTons();
+      const target = Math.min(Math.max(0, modelTargetTons()), landfill);
+      const simTarget = Math.min(Math.max(0, simulatedDivertedTons()), landfill);
+
+      const years=[], statusQuoCum=[], improvedCum=[], simImprovedCum=[];
+      let sqCum=0, imCum=0, simCum=0, cumSaving=-invest, payback=null, totalSaving=0, simTotalSaving=0;
+      let simCumSaving=-invest, simPayback=null;
+      for(let t=0; t<H; t++){
+        const levy = baseLevy * Math.pow(1+rise, t);
+        const gate = flatTreatment + levy; // escalating gate fee = flat treatment + rising levy
+        const grow = Math.pow(1+popGrowth, t); // population growth scales total waste each year
+        const landfillT = landfill * grow;
+        const diverted = target * Math.min(1, (t+1)/ramp) * grow; // diverted scales too → recycling share preserved
+        const simDiv = simTarget * Math.min(1, (t+1)/ramp) * grow;
+        const sq = landfillT * gate;
+        const im = (landfillT - diverted) * gate + diverted * treat;
+        const simIm = (landfillT - simDiv) * gate + simDiv * treat;
+        sqCum += sq; imCum += im; simCum += simIm;
+        cumSaving += (sq - im); totalSaving += (sq - im); simTotalSaving += (sq - simIm);
+        simCumSaving += (sq - simIm);
+        years.push(t+1); statusQuoCum.push(sqCum); improvedCum.push(imCum); simImprovedCum.push(simCum);
+        if(payback === null && cumSaving >= 0) payback = t+1;
+        if(simPayback === null && simCumSaving >= 0) simPayback = t+1;
+      }
+      const netSaving = totalSaving - invest;
+      const avgAnnual = totalSaving / H;
+      const roi = invest > 0 ? (netSaving / invest * 100) : null;
+      const simNetSaving = simTotalSaving - invest;
+      const simAvgAnnual = simTotalSaving / H;
+      const simRoi = invest > 0 ? (simNetSaving / invest * 100) : null;
+      // Payback only meaningful when a plan actually diverts something
+      if(simTarget <= 0) simPayback = null;
+      if(target <= 0) payback = null;
+      return { years, statusQuoCum, improvedCum, simImprovedCum, totalSaving, netSaving, avgAnnual, roi, payback, target, simTarget, simTotalSaving, simNetSaving, simAvgAnnual, simRoi, simPayback };
+    }
+
+    function updateDashboardKPIs(m){
+      const s = strings[currentLang];
+      document.getElementById('kpiAnnualVal').textContent = '₪' + formatNumber(m.avgAnnual);
+      document.getElementById('kpiCumulativeVal').textContent = '₪' + formatNumber(m.netSaving);
+      document.getElementById('kpiPaybackVal').textContent = (m.payback == null) ? s.paybackNever : s.paybackYearUnit(m.payback);
+      document.getElementById('kpiRoiVal').textContent = (m.roi == null) ? '—' : Math.round(m.roi) + '%';
+      document.getElementById('kpiSimVal').textContent = '₪' + formatNumber(m.simNetSaving);
+      document.getElementById('kpiSimAnnualVal').textContent = '₪' + formatNumber(m.simAvgAnnual);
+      document.getElementById('kpiSimPaybackVal').textContent = (m.simPayback == null) ? s.paybackNever : s.paybackYearUnit(m.simPayback);
+      document.getElementById('kpiSimRoiVal').textContent = (m.simRoi == null) ? '—' : Math.round(m.simRoi) + '%';
+    }
+
+    function renderMultiYearChart(m){
+      if(typeof Chart === 'undefined') return;
+      const canvas = document.getElementById('multiYearChart');
+      if(!canvas) return;
+      const s = strings[currentLang];
+      const data = {
+        labels: m.years,
+        datasets: [
+          { label: s.chartStatusQuo, data: m.statusQuoCum, borderColor: '#ef4444', backgroundColor: 'transparent', fill: false, borderWidth: 2.5, tension: 0.25, pointRadius: 0 },
+          { label: s.chartImproved, data: m.improvedCum, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.14)', fill: 0, tension: 0.25, pointRadius: 0, borderWidth: 2 },
+          { label: s.chartSimImproved, data: m.simImprovedCum, borderColor: '#6366f1', backgroundColor: 'transparent', fill: false, borderDash: [6,4], tension: 0.25, pointRadius: 0, borderWidth: 2 }
+        ]
+      };
+      const opts = {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { boxWidth: 12, font: { size: 11 } } },
+          tooltip: { callbacks: { title: (items)=> items.length ? s.chartTooltipTitle(parseInt(items[0].label, 10) || (items[0].dataIndex+1)) : '', label: (ctx)=> ctx.dataset.label + ': ₪' + formatNumber(ctx.parsed.y) } }
+        },
+        scales: {
+          x: { title: { display: true, text: s.chartXAxis, font: { size: 11 } }, grid: { display: false } },
+          y: { ticks: { callback: (v)=> '₪' + (v>=1000 ? (v/1000).toFixed(0)+'K' : v) }, grid: { color: '#f1f5f9' } }
+        }
+      };
+      if(dashboardChart){
+        dashboardChart.data = data;
+        dashboardChart.options = opts;
+        dashboardChart.update();
+      } else {
+        dashboardChart = new Chart(canvas.getContext('2d'), { type: 'line', data, options: opts });
+      }
+    }
+
+    function refreshModel(){
+      if(!currentMunicipality) return;
+      const m = computeMultiYear();
+      updateDashboardKPIs(m);
+      renderMultiYearChart(m);
+      const di = document.getElementById('inpDiverted');
+      if(di) di.value = Math.round(m.target);
+    }
+
+    function refreshDashboard(){
+      if(!currentMunicipality) return;
+      buildStreamDashboard();
+      refreshModel();
+    }
+
+    function initDashboardInputs(){
+      economicState = { ...economicDefaults };
+      selectedStream = null;
+      streamEditMode = 'percent';
+      streamRecovery = {};
+      for(const k in wasteComposition) streamRecovery[k] = wasteComposition[k].recovery;
+      const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.value = val; };
+      set('inpHorizon', economicDefaults.horizonYears);
+      set('inpBaseLevy', economicDefaults.baseLevyPerTon);
+      set('inpLevyRise', economicDefaults.levyAnnualRise * 100);
+      set('inpRampUp', economicDefaults.rampUpYears);
+      set('inpInvestment', economicDefaults.investment);
+      set('inpTreatment', economicDefaults.treatmentCostPerTon);
+      set('inpPopGrowth', economicDefaults.populationGrowth * 100);
+      updateStreamControls();
+    }
+
+    function syncEconomicInputs(){
+      const num = (id,def)=>{ const v=parseFloat(document.getElementById(id).value); return isNaN(v)?def:v; };
+      economicState.horizonYears = Math.max(1, Math.round(num('inpHorizon',10)));
+      economicState.baseLevyPerTon = Math.max(0, num('inpBaseLevy',0));
+      economicState.levyAnnualRise = Math.max(0, num('inpLevyRise',0)) / 100;
+      economicState.rampUpYears = Math.max(1, Math.round(num('inpRampUp',3)));
+      economicState.investment = Math.max(0, num('inpInvestment',0));
+      economicState.treatmentCostPerTon = num('inpTreatment',0);
+      economicState.populationGrowth = Math.max(0, num('inpPopGrowth',0)) / 100;
+    }
+
+    ['inpHorizon','inpBaseLevy','inpLevyRise','inpRampUp','inpInvestment','inpTreatment','inpPopGrowth'].forEach(id=>{
+      document.getElementById(id).addEventListener('input', ()=>{ syncEconomicInputs(); buildStreamDashboard(); refreshModel(); });
+    });
+    costPerTonInput.addEventListener('input', ()=>{ if(currentMunicipality) refreshDashboard(); });
+
+    document.getElementById('streamAllBtn').addEventListener('click', ()=>{ selectedStream = null; updateStreamControls(); buildStreamDashboard(); refreshModel(); });
+    document.getElementById('streamUnitPct').addEventListener('click', ()=>{ streamEditMode = 'percent'; updateStreamControls(); buildStreamDashboard(); });
+    document.getElementById('streamUnitTon').addEventListener('click', ()=>{ streamEditMode = 'tons'; updateStreamControls(); buildStreamDashboard(); });
+
+    // Info modal
+    function openInfoModal(titleKey, bodyKey){
+      const s = strings[currentLang];
+      document.getElementById('infoModalTitle').textContent = s[titleKey];
+      document.getElementById('infoModalBody').innerHTML = s[bodyKey];
+      document.getElementById('infoModal').classList.remove('hidden');
+    }
+    function closeInfoModal(){ document.getElementById('infoModal').classList.add('hidden'); }
+    document.getElementById('streamsInfoBtn').addEventListener('click', ()=>openInfoModal('streamsInfoTitle','streamsInfoBody'));
+    document.getElementById('economicInfoBtn').addEventListener('click', ()=>openInfoModal('economicInfoTitle','economicInfoBody'));
+    document.getElementById('infoModalClose').addEventListener('click', closeInfoModal);
+    document.getElementById('infoModal').addEventListener('click', (e)=>{ if(e.target === document.getElementById('infoModal')) closeInfoModal(); });
 
     // PDF Export
     document.getElementById('downloadPdfButton').addEventListener('click', downloadPDF);
