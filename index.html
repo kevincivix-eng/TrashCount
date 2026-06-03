@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- TrashCount / muniwaste — Beta 0.3.0 -->
+<!-- TrashCount / muniwaste — Beta 0.3.1 -->
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -274,21 +274,21 @@
 
         <!-- Metric cards -->
         <div class="flex-1 min-w-[460px] grid grid-cols-4 gap-2.5 items-stretch">
-          <div class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 h-full flex flex-col justify-center">
+          <div class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 h-full flex flex-col justify-start">
             <div id="cardTotalWasteLabel" class="text-xs font-medium text-gray-500 mb-0.5">סה״כ פסולת</div>
             <div><span id="totalWasteOriginal" class="text-base font-bold text-gray-800">0</span> <span id="cardTonLabel" class="text-[10px] text-gray-300">טון</span></div>
           </div>
-          <div class="px-3 py-2 rounded-xl bg-green-50 border border-green-100 h-full flex flex-col justify-center">
+          <div class="px-3 py-2 rounded-xl bg-green-50 border border-green-100 h-full flex flex-col justify-start">
             <div id="cardRecycledLabel" class="text-xs font-medium text-gray-500 mb-0.5">פסולת ממוחזרת</div>
             <div id="recycledSimulated" class="text-sm font-bold text-green-600">סימולציה: 0</div>
             <div id="recycledOriginal" class="text-[10px] text-gray-400">מקור: 0</div>
           </div>
-          <div class="px-3 py-2 rounded-xl bg-orange-50 border border-orange-100 h-full flex flex-col justify-center">
+          <div class="px-3 py-2 rounded-xl bg-orange-50 border border-orange-100 h-full flex flex-col justify-start">
             <div id="cardNonRecycledLabel" class="text-xs font-medium text-gray-500 mb-0.5">לא ממוחזרת</div>
             <div id="nonRecycledSimulated" class="text-sm font-bold text-orange-500">סימולציה: 0</div>
             <div id="nonRecycledOriginal" class="text-[10px] text-gray-400">מקור: 0</div>
           </div>
-          <div class="px-3 py-2 rounded-xl bg-blue-50 border border-blue-100 h-full flex flex-col justify-center">
+          <div class="px-3 py-2 rounded-xl bg-blue-50 border border-blue-100 h-full flex flex-col justify-start">
             <div id="cardSavingsLabel" class="text-xs font-medium text-gray-500 mb-0.5">חיסכון מוערך</div>
             <div id="estimatedSavings" class="text-base font-bold text-green-600">₪0</div>
             <div id="originalCost" class="text-[10px] text-gray-400">עלות מקורית: ₪0</div>
@@ -346,6 +346,10 @@
         </div>
         <h2 id="economicTitle" class="text-sm font-semibold text-gray-700">מודל כדאיות כלכלית רב-שנתי</h2>
         <button id="economicInfoBtn" class="text-gray-400 hover:text-blue-600 text-xs flex items-center gap-1 mr-auto"><i class="fas fa-circle-info"></i><span id="economicInfoLabel">מידע נוסף</span></button>
+      </div>
+      <div class="px-5 pt-4 -mb-1 flex items-center gap-2 text-xs">
+        <span id="modelStreamPrefix" class="text-gray-400">הזרם הנבחר למודל:</span>
+        <span id="modelStreamBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-medium bg-emerald-50 text-emerald-700 border border-emerald-100"><i class="fas fa-layer-group text-[10px]"></i><span id="modelStreamName">כל הזרמים</span></span>
       </div>
       <div class="p-5 grid grid-cols-1 lg:grid-cols-3 gap-5">
 
@@ -745,6 +749,7 @@
         streamsHint: '* פירוק זרם ההטמנה הביתי לפי אומדן הרכב פסולת תקני; לחצ/י על זרם כדי להזין אותו כיעד ההסטה במודל.',
         thStream: 'זרם', thStreamLandfill: 'בהטמנה (טון)', thStreamDivertable: 'ניתן להסיט (טון)', thStreamOpportunity: 'הזדמנות ₪/שנה',
         economicTitle: 'מודל כדאיות כלכלית רב-שנתי',
+        modelStreamPrefix: 'הזרם הנבחר למודל:', modelStreamAll: 'כל הזרמים',
         inpHorizonLabel: 'אופק (שנים)', inpBaseLevyLabel: 'היטל הטמנה ₪/טון', inpLevyRiseLabel: 'עליית היטל לשנה (%)',
         inpDivertedLabel: 'יעד הסטה (טון/שנה)', inpRampUpLabel: 'שנות יישום (רמפ-אפ)', inpInvestmentLabel: 'עלות השקעה (₪)', inpTreatmentLabel: 'עלות מיחזור לטון מוסט (₪)',
         inpPopGrowthLabel: 'צמיחת אוכלוסייה לשנה (%)', popGrowthNote: '* צמיחת האוכלוסייה מגדילה את כמות הפסולת הכוללת בכל שנה — גם המוטמנת וגם המוסטת למיחזור גדלות באותו שיעור, כך שאחוז המיחזור נשמר.',
@@ -824,6 +829,7 @@
         streamsHint: '* The household-landfill stream is broken down by a standard waste-composition estimate; click a stream to load it as the diversion target in the model.',
         thStream: 'Stream', thStreamLandfill: 'In Landfill (tons)', thStreamDivertable: 'Divertable (tons)', thStreamOpportunity: 'Opportunity ₪/yr',
         economicTitle: 'Multi-Year Economic Viability Model',
+        modelStreamPrefix: 'Stream feeding the model:', modelStreamAll: 'All streams',
         inpHorizonLabel: 'Horizon (years)', inpBaseLevyLabel: 'Landfill levy ₪/ton', inpLevyRiseLabel: 'Levy rise per year (%)',
         inpDivertedLabel: 'Diversion target (tons/yr)', inpRampUpLabel: 'Ramp-up years', inpInvestmentLabel: 'Investment cost (₪)', inpTreatmentLabel: 'Recycling cost per diverted ton (₪)',
         inpPopGrowthLabel: 'Population growth per year (%)', popGrowthNote: '* Population growth increases total waste every year — both landfilled and diverted-to-recycling grow at the same rate, so the recycling share is preserved.',
@@ -915,6 +921,7 @@
       setText('thStream', s.thStream); setText('thStreamLandfill', s.thStreamLandfill);
       setText('thStreamDivertable', s.thStreamDivertable); setText('thStreamOpportunity', s.thStreamOpportunity);
       setText('economicTitle', s.economicTitle);
+      setText('modelStreamPrefix', s.modelStreamPrefix); updateModelStreamBadge();
       setText('inpHorizonLabel', s.inpHorizonLabel); setText('inpBaseLevyLabel', s.inpBaseLevyLabel);
       setText('inpLevyRiseLabel', s.inpLevyRiseLabel); setText('inpDivertedLabel', s.inpDivertedLabel);
       setText('inpRampUpLabel', s.inpRampUpLabel); setText('inpInvestmentLabel', s.inpInvestmentLabel);
@@ -1585,6 +1592,18 @@
         pctBtn.className = streamEditMode === 'percent' ? a : i;
         tonBtn.className = streamEditMode === 'tons' ? a : i;
       }
+      updateModelStreamBadge();
+    }
+
+    function updateModelStreamBadge(){
+      const s = strings[currentLang];
+      const nameEl = document.getElementById('modelStreamName');
+      const badge = document.getElementById('modelStreamBadge');
+      if(!nameEl || !badge) return;
+      const isAll = !(selectedStream && (selectedStream in wasteComposition));
+      nameEl.textContent = isAll ? s.modelStreamAll : (labelsStreams[currentLang][selectedStream] || selectedStream);
+      badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-medium border ' +
+        (isAll ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-blue-50 text-blue-700 border-blue-100');
     }
 
     function buildStreamDashboard(){
@@ -1717,8 +1736,8 @@
         labels: m.years,
         datasets: [
           { label: s.chartStatusQuo, data: m.statusQuoCum, borderColor: '#ef4444', backgroundColor: 'transparent', fill: false, borderWidth: 2.5, tension: 0.25, pointRadius: 0 },
-          { label: s.chartImproved, data: m.improvedCum, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.14)', fill: 0, tension: 0.25, pointRadius: 0, borderWidth: 2 },
-          { label: s.chartSimImproved, data: m.simImprovedCum, borderColor: '#6366f1', backgroundColor: 'transparent', fill: false, borderDash: [6,4], tension: 0.25, pointRadius: 0, borderWidth: 2 }
+          { label: s.chartSimImproved, data: m.simImprovedCum, borderColor: '#6366f1', backgroundColor: 'transparent', fill: false, borderDash: [6,4], tension: 0.25, pointRadius: 0, borderWidth: 2 },
+          { label: s.chartImproved, data: m.improvedCum, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.14)', fill: 0, tension: 0.25, pointRadius: 0, borderWidth: 2 }
         ]
       };
       const opts = {
