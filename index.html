@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- TrashCount / muniwaste — Beta 0.3.1 -->
+<!-- TrashCount / muniwaste — Beta 0.4.0 -->
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -356,35 +356,47 @@
         <!-- inputs -->
         <div class="space-y-3">
           <div>
-            <label id="inpHorizonLabel" class="block text-xs font-medium text-gray-400 mb-1">אופק (שנים)</label>
-            <input id="inpHorizon" type="number" min="1" max="30" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+            <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpOverallCostLabel">עלות כללית ₪/טון</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpOverallCostTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">מחיר השער המלא לטון בהטמנה — סך ההיטל + התפעול. זהו הערך שהוזן במסך הראשון, וניתן לעדכן אותו גם כאן. עריכתו מאזנת את עלות התפעול (ההיטל נשאר).</span></span></label>
+            <input id="inpOverallCost" type="number" min="0" step="1" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
           </div>
           <div>
-            <label id="inpBaseLevyLabel" class="block text-xs font-medium text-gray-400 mb-1">היטל הטמנה ₪/טון</label>
+            <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpBaseLevyLabel">היטל הטמנה ₪/טון</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpBaseLevyTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">רכיב המס הממשלתי מתוך מחיר השער. רק הוא מטפס לפי "עליית היטל". עריכתו מעדכנת את העלות הכללית (כללית = היטל + תפעול).</span></span></label>
             <input id="inpBaseLevy" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
           </div>
           <div>
-            <label id="inpLevyRiseLabel" class="block text-xs font-medium text-gray-400 mb-1">עליית היטל לשנה (%)</label>
+            <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpLevyRiseLabel">עליית היטל לשנה (%)</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpLevyRiseTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">קצב הטיפוס השנתי של ההיטל. היטל בשנה t = היטל בסיס × (1+אחוז)^t. מנוע עיקרי של הכדאיות — מייקר את "המשך כרגיל".</span></span></label>
             <input id="inpLevyRise" type="number" min="0" step="0.5" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
           </div>
           <div>
-            <label id="inpDivertedLabel" class="block text-xs font-medium text-gray-400 mb-1">יעד הסטה (טון/שנה)</label>
+            <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpOpsCostLabel">עלות תפעול ₪/טון</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpOpsCostTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">כל מה שאינו ההיטל במחיר השער: שינוע, תפעול האתר והוצאות נוספות. עריכתו מעדכנת את העלות הכללית (כללית = היטל + תפעול).</span></span></label>
+            <input id="inpOpsCost" type="number" min="0" step="1" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+          </div>
+          <div>
+            <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpOpsRiseLabel">עליית תפעול לשנה (%)</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpOpsRiseTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">קצב הטיפוס השנתי של עלות התפעול (למשל דלק/אינפלציה). תפעול בשנה t = תפעול בסיס × (1+אחוז)^t.</span></span></label>
+            <input id="inpOpsRise" type="number" min="0" step="0.5" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+          </div>
+          <div>
+            <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpHorizonLabel">אופק (שנים)</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpHorizonTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">מספר השנים שהמודל מחשב קדימה. אופק ארוך יותר ⇐ חיסכון מצטבר גדול יותר, כי ההיטל ממשיך לטפס.</span></span></label>
+            <input id="inpHorizon" type="number" min="1" max="30" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+          </div>
+          <div>
+            <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpDivertedLabel">יעד הסטה (טון/שנה)</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpDivertedTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">כמות הפסולת שמוסטת מהטמנה למיחזור בתרחיש השיפור. לקריאה בלבד — נקבעת מהזרם שנבחר ב"ניהול זרמי פסולת".</span></span></label>
             <input id="inpDiverted" type="number" min="0" readonly class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500 tabular-nums cursor-not-allowed">
           </div>
           <div>
-            <label id="inpRampUpLabel" class="block text-xs font-medium text-gray-400 mb-1">שנות יישום (רמפ-אפ)</label>
+            <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpRampUpLabel">שנות יישום (רמפ-אפ)</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpRampUpTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">מספר השנים עד שמגיעים ליעד ההסטה המלא. ההסטה גדלה בהדרגה: בשנה t מגיעים ל-min(1,(t+1)/שנים) מהיעד.</span></span></label>
             <input id="inpRampUp" type="number" min="1" max="20" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
           </div>
           <div>
-            <label id="inpInvestmentLabel" class="block text-xs font-medium text-gray-400 mb-1">עלות השקעה (₪)</label>
+            <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpInvestmentLabel">עלות השקעה (₪)</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpInvestmentTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">עלות חד-פעמית להקמת המערך (פחים, קמפיין, תשתית). מנוכה מהחיסכון המצטבר וקובעת את שנת האיזון וה-ROI.</span></span></label>
             <input id="inpInvestment" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
           </div>
           <div>
-            <label id="inpTreatmentLabel" class="block text-xs font-medium text-gray-400 mb-1">עלות מיחזור לטון מוסט (₪)</label>
+            <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpTreatmentLabel">עלות מיחזור לטון מוסט (₪)</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpTreatmentTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">כמה עולה לטפל/למחזר טון שהוסט מהטמנה. יכול להיות 0, או שלילי אם יש הכנסה ממכירת החומר. החיסכון לטון = מחיר השער − ערך זה.</span></span></label>
             <input id="inpTreatment" type="number" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
           </div>
           <div>
-            <label id="inpPopGrowthLabel" class="block text-xs font-medium text-gray-400 mb-1">צמיחת אוכלוסייה לשנה (%)</label>
+            <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpPopGrowthLabel">צמיחת אוכלוסייה לשנה (%)</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpPopGrowthTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">גידול שנתי בכמות הפסולת הכוללת. מגדיל גם הטמנה וגם הסטה באותו שיעור, כך שאחוז המיחזור נשמר.</span></span></label>
             <input id="inpPopGrowth" type="number" min="0" step="0.5" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
           </div>
           <p id="levyNote" class="text-[11px] text-gray-300">* היטל ההטמנה — לאימות מול הלוח הרשמי</p>
@@ -395,11 +407,12 @@
         <div class="lg:col-span-2 space-y-4">
           <!-- Group 1: Opportunity potential -->
           <div>
-            <div class="flex items-center gap-1.5 mb-1.5">
+            <button type="button" id="kpiOppToggle" class="flex items-center gap-1.5 mb-1.5 w-full text-start group" title="הצג/הסתר">
               <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500"></span>
               <span id="kpiGroupOppLabel" class="text-xs font-semibold text-gray-600">פוטנציאל ההזדמנות</span>
-            </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <i id="kpiOppChevron" class="fas fa-chevron-up text-[10px] text-gray-400 group-hover:text-gray-600 ms-auto transition-transform"></i>
+            </button>
+            <div id="kpiOppBody" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <div class="px-3 py-2.5 rounded-xl bg-green-50 border border-green-100">
                 <div id="kpiCumulativeLabel" class="text-[11px] font-medium text-gray-500 mb-0.5">חיסכון מצטבר (נטו)</div>
                 <div id="kpiCumulativeVal" class="text-base font-bold text-green-600">₪0</div>
@@ -420,11 +433,12 @@
           </div>
           <!-- Group 2: Simulation model -->
           <div>
-            <div class="flex items-center gap-1.5 mb-1.5">
+            <button type="button" id="kpiSimToggle" class="flex items-center gap-1.5 mb-1.5 w-full text-start group" title="הצג/הסתר">
               <span class="inline-block w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
               <span id="kpiGroupSimLabel" class="text-xs font-semibold text-gray-600">מודל הסימולציה</span>
-            </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <i id="kpiSimChevron" class="fas fa-chevron-up text-[10px] text-gray-400 group-hover:text-gray-600 ms-auto transition-transform"></i>
+            </button>
+            <div id="kpiSimBody" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <div class="px-3 py-2.5 rounded-xl bg-indigo-50 border border-indigo-100">
                 <div id="kpiSimCumulativeLabel" class="text-[11px] font-medium text-gray-500 mb-0.5">חיסכון מצטבר (נטו)</div>
                 <div id="kpiSimVal" class="text-base font-bold text-indigo-600">₪0</div>
@@ -680,6 +694,7 @@
     // Multi-year economic model defaults (all editable in UI)
     const economicDefaults = {
       horizonYears: 10, baseLevyPerTon: 0, levyAnnualRise: 0.05,
+      operationsCostPerTon: null, operationsAnnualRise: 0,
       rampUpYears: 3, investment: 0, treatmentCostPerTon: 0, populationGrowth: 0.02, divertedTonsTarget: null
     };
     let economicState = { ...economicDefaults };
@@ -751,6 +766,18 @@
         economicTitle: 'מודל כדאיות כלכלית רב-שנתי',
         modelStreamPrefix: 'הזרם הנבחר למודל:', modelStreamAll: 'כל הזרמים',
         inpHorizonLabel: 'אופק (שנים)', inpBaseLevyLabel: 'היטל הטמנה ₪/טון', inpLevyRiseLabel: 'עליית היטל לשנה (%)',
+        inpOverallCostLabel: 'עלות כללית ₪/טון', inpOpsCostLabel: 'עלות תפעול ₪/טון', inpOpsRiseLabel: 'עליית תפעול לשנה (%)',
+        inpHorizonTip: 'מספר השנים שהמודל מחשב קדימה. אופק ארוך יותר ⇐ חיסכון מצטבר גדול יותר, כי ההיטל ממשיך לטפס.',
+        inpOverallCostTip: 'מחיר השער המלא לטון בהטמנה — סך ההיטל + התפעול. זהו הערך שהוזן במסך הראשון, וניתן לעדכן אותו גם כאן. עריכתו מאזנת את עלות התפעול (ההיטל נשאר).',
+        inpBaseLevyTip: 'רכיב המס הממשלתי מתוך מחיר השער. רק הוא מטפס לפי "עליית היטל". עריכתו מעדכנת את העלות הכללית (כללית = היטל + תפעול).',
+        inpLevyRiseTip: 'קצב הטיפוס השנתי של ההיטל. היטל בשנה t = היטל בסיס × (1+אחוז)^t. מנוע עיקרי של הכדאיות — מייקר את "המשך כרגיל".',
+        inpOpsCostTip: 'כל מה שאינו ההיטל במחיר השער: שינוע, תפעול האתר והוצאות נוספות. עריכתו מעדכנת את העלות הכללית (כללית = היטל + תפעול).',
+        inpOpsRiseTip: 'קצב הטיפוס השנתי של עלות התפעול (למשל דלק/אינפלציה). תפעול בשנה t = תפעול בסיס × (1+אחוז)^t.',
+        inpDivertedTip: 'כמות הפסולת שמוסטת מהטמנה למיחזור בתרחיש השיפור. לקריאה בלבד — נקבעת מהזרם שנבחר ב"ניהול זרמי פסולת".',
+        inpRampUpTip: 'מספר השנים עד שמגיעים ליעד ההסטה המלא. ההסטה גדלה בהדרגה: בשנה t מגיעים ל-min(1,(t+1)/שנים) מהיעד.',
+        inpInvestmentTip: 'עלות חד-פעמית להקמת המערך (פחים, קמפיין, תשתית). מנוכה מהחיסכון המצטבר וקובעת את שנת האיזון וה-ROI.',
+        inpTreatmentTip: 'כמה עולה לטפל/למחזר טון שהוסט מהטמנה. יכול להיות 0, או שלילי אם יש הכנסה ממכירת החומר. החיסכון לטון = מחיר השער − ערך זה.',
+        inpPopGrowthTip: 'גידול שנתי בכמות הפסולת הכוללת. מגדיל גם הטמנה וגם הסטה באותו שיעור, כך שאחוז המיחזור נשמר.',
         inpDivertedLabel: 'יעד הסטה (טון/שנה)', inpRampUpLabel: 'שנות יישום (רמפ-אפ)', inpInvestmentLabel: 'עלות השקעה (₪)', inpTreatmentLabel: 'עלות מיחזור לטון מוסט (₪)',
         inpPopGrowthLabel: 'צמיחת אוכלוסייה לשנה (%)', popGrowthNote: '* צמיחת האוכלוסייה מגדילה את כמות הפסולת הכוללת בכל שנה — גם המוטמנת וגם המוסטת למיחזור גדלות באותו שיעור, כך שאחוז המיחזור נשמר.',
         levyNote: '* רכיב ההיטל מתוך מחיר השער — רק הוא מטפס עם השנים. לאימות מול הלוח הרשמי.',
@@ -831,6 +858,18 @@
         economicTitle: 'Multi-Year Economic Viability Model',
         modelStreamPrefix: 'Stream feeding the model:', modelStreamAll: 'All streams',
         inpHorizonLabel: 'Horizon (years)', inpBaseLevyLabel: 'Landfill levy ₪/ton', inpLevyRiseLabel: 'Levy rise per year (%)',
+        inpOverallCostLabel: 'Overall cost ₪/ton', inpOpsCostLabel: 'Operations cost ₪/ton', inpOpsRiseLabel: 'Operations rise per year (%)',
+        inpHorizonTip: 'Number of years the model projects forward. A longer horizon ⇒ larger cumulative saving, because the levy keeps climbing.',
+        inpOverallCostTip: 'The full gate fee per landfilled ton — levy + operations. This is the value entered on the first screen and can be updated here too. Editing it re-balances operations (levy stays).',
+        inpBaseLevyTip: 'The government-tax component of the gate fee. Only this part escalates by "Levy rise". Editing it updates the overall cost (overall = levy + operations).',
+        inpLevyRiseTip: 'Annual escalation rate of the levy. Levy in year t = base levy × (1+rate)^t. A key driver of viability — it makes "status quo" costlier.',
+        inpOpsCostTip: 'Everything in the gate fee other than the levy: transport, site operation and other expenses. Editing it updates the overall cost (overall = levy + operations).',
+        inpOpsRiseTip: 'Annual escalation rate of the operations cost (e.g. fuel/inflation). Operations in year t = base operations × (1+rate)^t.',
+        inpDivertedTip: 'Tons diverted from landfill to recycling in the improved scenario. Read-only — set by the stream selected in "Waste-stream management".',
+        inpRampUpTip: 'Years until the full diversion target is reached. Diversion ramps up gradually: in year t it reaches min(1,(t+1)/years) of the target.',
+        inpInvestmentTip: 'One-time cost to set up the system (bins, campaign, infrastructure). Deducted from cumulative saving; determines payback year and ROI.',
+        inpTreatmentTip: 'Cost to treat/recycle a diverted ton. Can be 0, or negative if material sale generates revenue. Saving per ton = gate fee − this value.',
+        inpPopGrowthTip: 'Annual growth in total waste. Increases both landfill and diversion at the same rate, so the recycling share is preserved.',
         inpDivertedLabel: 'Diversion target (tons/yr)', inpRampUpLabel: 'Ramp-up years', inpInvestmentLabel: 'Investment cost (₪)', inpTreatmentLabel: 'Recycling cost per diverted ton (₪)',
         inpPopGrowthLabel: 'Population growth per year (%)', popGrowthNote: '* Population growth increases total waste every year — both landfilled and diverted-to-recycling grow at the same rate, so the recycling share is preserved.',
         levyNote: '* The levy component within the gate fee — only it rises over the years. To be verified against the official schedule.',
@@ -927,6 +966,14 @@
       setText('inpRampUpLabel', s.inpRampUpLabel); setText('inpInvestmentLabel', s.inpInvestmentLabel);
       setText('inpTreatmentLabel', s.inpTreatmentLabel); setText('levyNote', s.levyNote);
       setText('inpPopGrowthLabel', s.inpPopGrowthLabel); setText('popGrowthNote', s.popGrowthNote);
+      setText('inpOverallCostLabel', s.inpOverallCostLabel); setText('inpOpsCostLabel', s.inpOpsCostLabel);
+      setText('inpOpsRiseLabel', s.inpOpsRiseLabel);
+      setText('inpHorizonTip', s.inpHorizonTip);
+      setText('inpOverallCostTip', s.inpOverallCostTip); setText('inpBaseLevyTip', s.inpBaseLevyTip);
+      setText('inpLevyRiseTip', s.inpLevyRiseTip); setText('inpOpsCostTip', s.inpOpsCostTip);
+      setText('inpOpsRiseTip', s.inpOpsRiseTip); setText('inpDivertedTip', s.inpDivertedTip);
+      setText('inpRampUpTip', s.inpRampUpTip); setText('inpInvestmentTip', s.inpInvestmentTip);
+      setText('inpTreatmentTip', s.inpTreatmentTip); setText('inpPopGrowthTip', s.inpPopGrowthTip);
       setText('kpiAnnualLabel', s.kpiAnnualLabel); setText('kpiCumulativeLabel', s.kpiCumulativeLabel);
       setText('kpiPaybackLabel', s.kpiPaybackLabel); setText('kpiRoiLabel', s.kpiRoiLabel);
       setText('kpiGroupOppLabel', s.kpiGroupOppLabel); setText('kpiGroupSimLabel', s.kpiGroupSimLabel);
@@ -1670,11 +1717,14 @@
     function computeMultiYear(){
       const H = Math.max(1, economicState.horizonYears|0);
       const cost = parseFloat(costPerTonInput.value) || 0;
-      // The landfill gate fee (cost) is a blended price = treatment + levy.
-      // The levy is a COMPONENT of it that escalates over the years; the treatment part stays flat.
+      // The landfill gate fee (cost) is a blended price split into two components: levy + operations.
+      // Each escalates at its OWN annual rate; the gate fee per year = levy_t + operations_t.
       const baseLevy = Math.min(economicState.baseLevyPerTon || 0, cost);
-      const flatTreatment = Math.max(0, cost - baseLevy);
+      const operations = (economicState.operationsCostPerTon != null)
+        ? Math.max(0, economicState.operationsCostPerTon)
+        : Math.max(0, cost - baseLevy);
       const rise = economicState.levyAnnualRise || 0;
+      const opsRise = economicState.operationsAnnualRise || 0;
       const popGrowth = economicState.populationGrowth || 0;
       const ramp = Math.max(1, economicState.rampUpYears|0);
       const invest = economicState.investment || 0;
@@ -1688,7 +1738,8 @@
       let simCumSaving=-invest, simPayback=null;
       for(let t=0; t<H; t++){
         const levy = baseLevy * Math.pow(1+rise, t);
-        const gate = flatTreatment + levy; // escalating gate fee = flat treatment + rising levy
+        const ops = operations * Math.pow(1+opsRise, t);
+        const gate = levy + ops; // gate fee = rising levy + rising operations (each at its own rate)
         const grow = Math.pow(1+popGrowth, t); // population growth scales total waste each year
         const landfillT = landfill * grow;
         const diverted = target * Math.min(1, (t+1)/ramp) * grow; // diverted scales too → recycling share preserved
@@ -1786,10 +1837,14 @@
       set('inpHorizon', economicDefaults.horizonYears);
       set('inpBaseLevy', economicDefaults.baseLevyPerTon);
       set('inpLevyRise', economicDefaults.levyAnnualRise * 100);
+      set('inpOpsRise', economicDefaults.operationsAnnualRise * 100);
       set('inpRampUp', economicDefaults.rampUpYears);
       set('inpInvestment', economicDefaults.investment);
       set('inpTreatment', economicDefaults.treatmentCostPerTon);
       set('inpPopGrowth', economicDefaults.populationGrowth * 100);
+      // Initialise the linked cost trio (overall / levy / operations) from the first-screen overall cost
+      set('inpOverallCost', parseFloat(costPerTonInput.value) || 0);
+      reconcileCostComponents('costPerTon');
       updateStreamControls();
     }
 
@@ -1798,16 +1853,60 @@
       economicState.horizonYears = Math.max(1, Math.round(num('inpHorizon',10)));
       economicState.baseLevyPerTon = Math.max(0, num('inpBaseLevy',0));
       economicState.levyAnnualRise = Math.max(0, num('inpLevyRise',0)) / 100;
+      economicState.operationsCostPerTon = Math.max(0, num('inpOpsCost',0));
+      economicState.operationsAnnualRise = Math.max(0, num('inpOpsRise',0)) / 100;
       economicState.rampUpYears = Math.max(1, Math.round(num('inpRampUp',3)));
       economicState.investment = Math.max(0, num('inpInvestment',0));
       economicState.treatmentCostPerTon = num('inpTreatment',0);
       economicState.populationGrowth = Math.max(0, num('inpPopGrowth',0)) / 100;
     }
 
-    ['inpHorizon','inpBaseLevy','inpLevyRise','inpRampUp','inpInvestment','inpTreatment','inpPopGrowth'].forEach(id=>{
+    // Keep the three linked cost fields consistent: overall = levy + operations.
+    // Editing levy/operations recomputes the overall; editing the overall re-balances operations (levy fixed).
+    function reconcileCostComponents(source){
+      const r2 = (x)=> Math.round(x*100)/100;
+      const g = (id)=>{ const v=parseFloat(document.getElementById(id).value); return isNaN(v)?0:Math.max(0,v); };
+      let overall = g('inpOverallCost');
+      let levy = g('inpBaseLevy');
+      let ops = g('inpOpsCost');
+      if(source === 'costPerTon'){ const v=parseFloat(costPerTonInput.value); overall = isNaN(v)?0:Math.max(0,v); }
+      if(source === 'overall' || source === 'costPerTon'){
+        // overall is the anchor: operations absorbs the change; levy stays (capped at the overall)
+        if(overall < levy){ levy = overall; ops = 0; } else { ops = overall - levy; }
+      } else { // 'levy' or 'ops' edited → overall recomputes
+        overall = levy + ops;
+      }
+      overall = r2(overall); levy = r2(levy); ops = r2(ops);
+      document.getElementById('inpOverallCost').value = overall;
+      document.getElementById('inpBaseLevy').value = levy;
+      document.getElementById('inpOpsCost').value = ops;
+      costPerTonInput.value = overall; // keep the first-screen field in sync
+      economicState.baseLevyPerTon = levy;
+      economicState.operationsCostPerTon = ops;
+    }
+
+    ['inpHorizon','inpLevyRise','inpOpsRise','inpRampUp','inpInvestment','inpTreatment','inpPopGrowth'].forEach(id=>{
       document.getElementById(id).addEventListener('input', ()=>{ syncEconomicInputs(); buildStreamDashboard(); refreshModel(); });
     });
-    costPerTonInput.addEventListener('input', ()=>{ if(currentMunicipality) refreshDashboard(); });
+    // Linked cost fields: each edit reconciles the trio (overall = levy + operations) before refreshing
+    ['inpOverallCost','inpBaseLevy','inpOpsCost'].forEach(id=>{
+      document.getElementById(id).addEventListener('input', ()=>{
+        const src = id==='inpOverallCost' ? 'overall' : (id==='inpBaseLevy' ? 'levy' : 'ops');
+        reconcileCostComponents(src); syncEconomicInputs(); buildStreamDashboard(); refreshModel();
+      });
+    });
+    costPerTonInput.addEventListener('input', ()=>{ if(currentMunicipality){ reconcileCostComponents('costPerTon'); syncEconomicInputs(); refreshDashboard(); } });
+
+    // Collapse / expand the KPI groups so one can focus on a single mechanism
+    function toggleKpiGroup(which){
+      const body = document.getElementById(which==='opp' ? 'kpiOppBody' : 'kpiSimBody');
+      const chev = document.getElementById(which==='opp' ? 'kpiOppChevron' : 'kpiSimChevron');
+      if(!body || !chev) return;
+      const collapsed = body.classList.toggle('hidden');
+      chev.classList.toggle('rotate-180', collapsed);
+    }
+    document.getElementById('kpiOppToggle').addEventListener('click', ()=>toggleKpiGroup('opp'));
+    document.getElementById('kpiSimToggle').addEventListener('click', ()=>toggleKpiGroup('sim'));
 
     document.getElementById('streamAllBtn').addEventListener('click', ()=>{ selectedStream = null; updateStreamControls(); buildStreamDashboard(); refreshModel(); });
     document.getElementById('streamUnitPct').addEventListener('click', ()=>{ streamEditMode = 'percent'; updateStreamControls(); buildStreamDashboard(); });
