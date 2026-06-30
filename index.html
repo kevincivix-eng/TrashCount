@@ -7,6 +7,7 @@
   <title>סימולטור ניהול פסולת</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
     .alert-box{opacity:0;transition:opacity .3s ease-in-out}
@@ -33,6 +34,28 @@
     </div>
   </div>
 
+  <!-- ===== AUTH SCREEN (gates the whole app) ===== -->
+  <div id="authScreen" class="fixed inset-0 z-[60] bg-slate-50 flex items-center justify-center px-4">
+    <div class="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div class="text-center mb-5">
+        <div class="w-12 h-12 rounded-xl bg-green-600 text-white flex items-center justify-center mx-auto mb-3 text-lg"><i class="fas fa-recycle"></i></div>
+        <h2 id="authTitle" class="text-lg font-bold text-gray-800">סימולטור ניהול פסולת</h2>
+        <p id="authSubtitle" class="text-xs text-gray-400 mt-1">התחבר/י כדי להמשיך</p>
+      </div>
+      <div class="flex gap-1 p-1 bg-slate-100 rounded-lg mb-4 text-sm">
+        <button id="authTabSignin" type="button" class="flex-1 py-1.5 rounded-md font-medium">התחברות</button>
+        <button id="authTabSignup" type="button" class="flex-1 py-1.5 rounded-md font-medium">הרשמה</button>
+      </div>
+      <div class="space-y-3">
+        <input id="authEmail" type="email" autocomplete="email" placeholder="אימייל" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" dir="ltr">
+        <input id="authPassword" type="password" autocomplete="current-password" placeholder="סיסמה" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" dir="ltr">
+        <p id="authError" class="hidden text-xs text-red-500 leading-snug"></p>
+        <p id="authInfo" class="hidden text-xs text-green-600 leading-snug"></p>
+        <button id="authSubmit" type="button" class="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-all disabled:opacity-60">התחבר/י</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Header -->
   <header class="bg-gradient-to-l from-green-900 to-green-800 text-white shadow-md">
     <div class="container mx-auto px-6 py-5">
@@ -46,6 +69,10 @@
             <i class="fas fa-globe text-[10px]"></i>
             <span id="langToggleLabel">EN</span>
           </button>
+          <div id="userMenu" class="hidden items-center gap-2">
+            <span id="userEmail" class="text-green-200 text-xs hidden sm:inline" dir="ltr"></span>
+            <button id="logoutBtn" class="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-xs font-semibold transition-all border border-white/20 flex items-center gap-1.5"><i class="fas fa-right-from-bracket text-[10px]"></i><span id="logoutLabel">התנתק</span></button>
+          </div>
         </div>
         <div class="text-right">
           <h1 id="headerTitle" class="text-xl font-bold tracking-tight">סימולטור ניהול פסולת</h1>
@@ -305,6 +332,12 @@
   <!-- ===== DASHBOARD VIEW ===== -->
   <div id="dashboardView" class="hidden container mx-auto px-6 py-6 space-y-5">
 
+    <!-- Scenarios toolbar -->
+    <div class="flex items-center gap-2 flex-wrap">
+      <button id="saveScenarioBtn" class="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all"><i class="fas fa-camera text-xs"></i><span id="saveScenarioLabel">שמור תרחיש</span></button>
+      <button id="openScenariosBtn" class="flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-gray-50 text-gray-600 rounded-lg text-sm font-medium transition-all border border-gray-200"><i class="fas fa-folder-open text-xs"></i><span id="openScenariosLabel">התרחישים שלי</span><span id="scenarioCount" class="text-[10px] bg-gray-100 text-gray-500 rounded-full px-1.5 py-0.5">0</span></button>
+    </div>
+
     <!-- Layer 1: waste stream management -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2 flex-wrap">
@@ -484,6 +517,54 @@
   </div>
   <!-- end #dataScreen -->
 
+  <!-- Save Scenario Modal -->
+  <div id="saveScenarioModal" class="hidden fixed inset-0 z-[55] flex items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full">
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+        <i class="fas fa-camera text-green-600 text-sm"></i>
+        <h3 id="saveScenarioTitle" class="text-sm font-semibold text-gray-700">שמירת תרחיש</h3>
+      </div>
+      <div class="px-5 py-4 space-y-3">
+        <div>
+          <label id="scTitleLabel" class="block text-xs font-medium text-gray-400 mb-1">כותרת</label>
+          <input id="scTitleInput" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500">
+        </div>
+        <div>
+          <label id="scDescLabel" class="block text-xs font-medium text-gray-400 mb-1">תיאור (מה נעשה בתרחיש)</label>
+          <textarea id="scDescInput" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"></textarea>
+        </div>
+        <p id="scSaveError" class="hidden text-xs text-red-500"></p>
+      </div>
+      <div class="flex justify-end gap-3 px-5 py-4 border-t border-gray-100">
+        <button id="scSaveCancel" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-sm font-medium transition-all"><span id="scSaveCancelText">ביטול</span></button>
+        <button id="scSaveConfirm" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all disabled:opacity-60"><span id="scSaveConfirmText">שמור</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scenarios Panel Modal -->
+  <div id="scenariosModal" class="hidden fixed inset-0 z-[55] flex items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[85vh] flex flex-col">
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-folder-open text-gray-500 text-sm"></i>
+          <h3 id="scenariosPanelTitle" class="text-sm font-semibold text-gray-700">התרחישים שלי</h3>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="compareSelectedBtn" class="hidden items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition-all"><i class="fas fa-chart-line text-[10px]"></i><span id="compareSelectedLabel">השווה נבחרים</span></button>
+          <button id="scenariosClose" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+      <div id="scenariosList" class="px-5 py-4 overflow-y-auto space-y-2"></div>
+      <p id="scenariosEmpty" class="hidden px-5 py-8 text-center text-sm text-gray-400">עדיין לא שמרת תרחישים. לחץ "שמור תרחיש" בדשבורד.</p>
+      <!-- compare result -->
+      <div id="compareResult" class="hidden border-t border-gray-100 p-5 space-y-4 overflow-y-auto">
+        <div class="overflow-x-auto"><table id="compareTable" class="w-full text-xs"></table></div>
+        <div class="relative" style="height:260px"><canvas id="compareChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Dashboard Info Modal -->
   <div id="infoModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
     <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-y-auto">
@@ -621,8 +702,11 @@
         </button>
       </div>
       <div id="editModalContent" class="px-6 py-5 max-h-[65vh] overflow-y-auto space-y-6"></div>
-      <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100">
-        <p class="text-xs text-gray-400"><i class="fas fa-info-circle ml-1"></i><span id="editModalNote">השינויים חלים על הסשן הנוכחי בלבד</span></p>
+      <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100 gap-3 flex-wrap">
+        <div class="flex items-center gap-3">
+          <button id="editModalReset" class="text-xs text-gray-400 hover:text-red-500 underline-offset-2 hover:underline transition-all"><i class="fas fa-rotate-left ml-1"></i><span id="editModalResetText">אפס לנתוני המקור</span></button>
+          <p class="text-xs text-gray-400"><i class="fas fa-info-circle ml-1"></i><span id="editModalNote">השינויים נשמרים לחשבון שלך בלבד</span></p>
+        </div>
         <div class="flex gap-3">
           <button id="editModalCancel" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-sm font-medium transition-all"><span id="editModalCancelText">ביטול</span></button>
           <button id="editModalSave" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all"><span id="editModalSaveText">שמור שינויים</span></button>
@@ -632,6 +716,13 @@
   </div>
 
   <script>
+    // --- Supabase (auth + per-user storage) ---
+    const SUPABASE_URL = 'https://ogzeldqcivqoehwdsure.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_iphZYyHG53M_PsGpD3MvAw_fskHdVMl';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let currentUser = null;
+    let authMode = 'signin'; // 'signin' | 'signup'
+
     // --- Data ---
     const municipalities = {
       "Kuseife": { recyclables: { "Paper":0,"Cardboard":80.7,"Plastic":0,"Glass":0,"Electronic Waste":3.8,"Batteries and Accumulators":0,"Orange Bin (Plastic Packaging)":0,"Textiles":0,"Oil":0,"Metal and Iron":0,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":0,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":4618.922,"General Bulky Landfill":2.688,"Prunings Sent to Landfill":0 }, totalWaste:4706.11 },
@@ -647,6 +738,10 @@
       "Tel Sheva": { recyclables: { "Paper":0,"Cardboard":0,"Plastic":0,"Glass":0,"Electronic Waste":0,"Batteries and Accumulators":0,"Orange Bin (Plastic Packaging)":0,"Textiles":0,"Oil":0,"Metal and Iron":0,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":0,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":7122.22,"General Bulky Landfill":2838.76,"Prunings Sent to Landfill":0 }, totalWaste:9960.98 },
       "Ramat Negev": { recyclables: { "Paper":40.75,"Cardboard":281.07,"Plastic":2.7,"Glass":26.5,"Electronic Waste":4,"Batteries and Accumulators":0.7,"Orange Bin (Plastic Packaging)":79.88,"Textiles":5,"Oil":0,"Metal and Iron":90,"Home compost / Brown Bin / Organic Waste":0,"Tires":0,"Nylon (Non-Agricultural)":0,"Bulky Waste":230.4,"Prunings":0,"Other":0,"Refuse-Derived Fuel (RDF)":0 }, nonRecyclables: { "General Household Landfill":9518.6,"General Bulky Landfill":525.52,"Prunings Sent to Landfill":0 }, totalWaste:10805.12 }
     };
+    // Pristine copy of the official 2023 data — used to diff/reset personal source-data edits
+    const municipalitiesBaseline = JSON.parse(JSON.stringify(municipalities));
+    let userOverrides = {}; // { municipalityKey: { recyclables:{...}, nonRecyclables:{...} } } loaded per user
+    let restoringScenario = false; // true while a saved scenario is being restored (suppresses override overlay)
 
     const labelsRecyclables = {
       he: {
@@ -743,6 +838,17 @@
         costHintText: '(למה זה חשוב?)',
         costHintTooltip: 'הכנסת עלות ההטמנה לטון מאפשרת לחשב את <span class="text-green-300 font-semibold">העלויות והחיסכון הכספי</span> בסימולציה — כמה כסף תחסוך הרשות על כל טון שעובר ממיחזור במקום הטמנה.',
         startButtonText: 'הצג נתונים והתחל סימולציה',
+        authTitle: 'סימולטור ניהול פסולת', authSubtitle: 'התחבר/י כדי להמשיך',
+        authTabSignin: 'התחברות', authTabSignup: 'הרשמה',
+        authEmailPh: 'אימייל', authPasswordPh: 'סיסמה',
+        authSubmitSignin: 'התחבר/י', authSubmitSignup: 'הרשמה',
+        authMissing: 'נא למלא אימייל וסיסמה', authConfirmSent: 'נשלח אליך מייל אישור — אשר/י אותו כדי להתחבר.',
+        logoutLabel: 'התנתק',
+        saveScenarioLabel: 'שמור תרחיש', openScenariosLabel: 'התרחישים שלי',
+        saveScenarioTitle: 'שמירת תרחיש', scTitleLabel: 'כותרת', scDescLabel: 'תיאור (מה נעשה בתרחיש)',
+        scSaveCancelText: 'ביטול', scSaveConfirmText: 'שמור', scTitleRequired: 'נא להזין כותרת',
+        scenariosPanelTitle: 'התרחישים שלי', compareSelectedLabel: 'השווה נבחרים', scLoad: 'טען',
+        scenariosEmpty: 'עדיין לא שמרת תרחישים. לחץ "שמור תרחיש" בדשבורד.',
         backButtonText: 'החלף רשות',
         editSourceButtonText: 'ערוך נתוני מקור',
         downloadPdfButtonText: 'הורד PDF',
@@ -775,7 +881,7 @@
         binSimModalNote: 'כל פח כתום מהווה 0.855 טון מיחזור בשנה, המופחת מהפסולת המיועדת להטמנה (סכום אפס).',
         binSimModalCancel: 'ביטול', binSimModalSave: 'החל',
         editModalHeading: 'עריכת נתוני מקור',
-        editModalNote: 'השינויים חלים על הסשן הנוכחי בלבד',
+        editModalNote: 'השינויים נשמרים לחשבון שלך בלבד', editModalResetText: 'אפס לנתוני המקור',
         editModalCancel: 'ביטול', editModalSave: 'שמור שינויים',
         alertNoMunicipality: 'יש לבחור רשות מקומית כדי להמשיך.',
         alertNoLandfill: 'אין מספיק פסולת להטמנה כדי להמיר לערך המבוקש.',
@@ -837,6 +943,17 @@
         costHintText: '(Why does this matter?)',
         costHintTooltip: 'Entering the landfill cost per ton lets the simulator calculate the <span class="text-green-300 font-semibold">financial costs and savings</span> — how much money the municipality saves for every ton diverted from landfill to recycling.',
         startButtonText: 'Show Data & Start Simulation',
+        authTitle: 'Waste Management Simulator', authSubtitle: 'Sign in to continue',
+        authTabSignin: 'Sign in', authTabSignup: 'Sign up',
+        authEmailPh: 'Email', authPasswordPh: 'Password',
+        authSubmitSignin: 'Sign in', authSubmitSignup: 'Sign up',
+        authMissing: 'Please enter email and password', authConfirmSent: 'A confirmation email was sent — confirm it to sign in.',
+        logoutLabel: 'Log out',
+        saveScenarioLabel: 'Save scenario', openScenariosLabel: 'My scenarios',
+        saveScenarioTitle: 'Save scenario', scTitleLabel: 'Title', scDescLabel: 'Description (what this scenario does)',
+        scSaveCancelText: 'Cancel', scSaveConfirmText: 'Save', scTitleRequired: 'Please enter a title',
+        scenariosPanelTitle: 'My scenarios', compareSelectedLabel: 'Compare selected', scLoad: 'Load',
+        scenariosEmpty: 'No saved scenarios yet. Click "Save scenario" in the dashboard.',
         backButtonText: 'Change Municipality',
         editSourceButtonText: 'Edit Source Data',
         downloadPdfButtonText: 'Download PDF',
@@ -869,7 +986,7 @@
         binSimModalNote: 'Each orange bin equals 0.855 tons/year of recycling, deducted from landfill-bound waste (zero-sum).',
         binSimModalCancel: 'Cancel', binSimModalSave: 'Apply',
         editModalHeading: 'Edit Source Data',
-        editModalNote: 'Changes apply to the current session only',
+        editModalNote: 'Changes are saved to your account only', editModalResetText: 'Reset to source data',
         editModalCancel: 'Cancel', editModalSave: 'Save Changes',
         alertNoMunicipality: 'Please select a municipality to continue.',
         alertNoLandfill: 'Not enough landfill waste to convert to the requested value.',
@@ -941,6 +1058,17 @@
       setText('costHint', s.costHintText);
       setHtml('costHintTooltip', s.costHintTooltip);
       setText('startButtonText', s.startButtonText);
+      setText('authTitle', s.authTitle); setText('authSubtitle', s.authSubtitle);
+      setText('authTabSignin', s.authTabSignin); setText('authTabSignup', s.authTabSignup);
+      setText('logoutLabel', s.logoutLabel);
+      setText('saveScenarioLabel', s.saveScenarioLabel); setText('openScenariosLabel', s.openScenariosLabel);
+      setText('saveScenarioTitle', s.saveScenarioTitle); setText('scTitleLabel', s.scTitleLabel); setText('scDescLabel', s.scDescLabel);
+      setText('scSaveCancelText', s.scSaveCancelText); setText('scSaveConfirmText', s.scSaveConfirmText);
+      setText('scenariosPanelTitle', s.scenariosPanelTitle); setText('compareSelectedLabel', s.compareSelectedLabel);
+      setText('scenariosEmpty', s.scenariosEmpty);
+      { const e=document.getElementById('authEmail'); if(e) e.placeholder=s.authEmailPh; }
+      { const p=document.getElementById('authPassword'); if(p) p.placeholder=s.authPasswordPh; }
+      if(typeof setAuthMode==='function') setAuthMode(authMode);
       setText('backButtonText', s.backButtonText);
       setText('editSourceButtonText', s.editSourceButtonText);
       setText('downloadPdfButtonText', s.downloadPdfButtonText);
@@ -977,7 +1105,7 @@
       setText('binSimModalNote', s.binSimModalNote);
       setText('binSimModalCancelText', s.binSimModalCancel); setText('binSimModalSaveText', s.binSimModalSave);
       setText('editModalHeading', s.editModalHeading);
-      setText('editModalNote', s.editModalNote);
+      setText('editModalNote', s.editModalNote); setText('editModalResetText', s.editModalResetText);
       setText('editModalCancelText', s.editModalCancel); setText('editModalSaveText', s.editModalSave);
       setText('langToggleLabel', s.langToggleLabel);
       // Dashboard
@@ -1197,6 +1325,7 @@
       if(!key) return;
 
       currentMunicipality = key;
+      if(!restoringScenario) applyUserOverride(key); // overlay this user's edits — but not while restoring a saved scenario
       const data = municipalities[key];
 
       manualSimulated = {...data.recyclables};
@@ -2218,6 +2347,7 @@
     document.getElementById('editModalClose').addEventListener('click', closeEditModal);
     document.getElementById('editModalCancel').addEventListener('click', closeEditModal);
     document.getElementById('editModalSave').addEventListener('click', saveEditModal);
+    document.getElementById('editModalReset').addEventListener('click', ()=>{ closeEditModal(); resetUserOverride(currentMunicipality); });
     editModal.addEventListener('click', (e) => { if(e.target === editModal) closeEditModal(); });
 
     function openEditModal(){
@@ -2291,6 +2421,7 @@
       data.totalWaste = Object.values(data.recyclables).reduce((s,v)=>s+v,0)
                       + Object.values(data.nonRecyclables).reduce((s,v)=>s+v,0);
 
+      saveUserOverride(currentMunicipality); // persist this user's edits to their account
       closeEditModal();
       loadMunicipalityData();
     }
@@ -2314,6 +2445,320 @@
 
       setButtonsAvailability(); updateSummary();
     }
+
+    // ===== Auth =====
+    function setAuthMode(mode){
+      authMode = mode;
+      const s = strings[currentLang];
+      const on = 'flex-1 py-1.5 rounded-md font-medium bg-white shadow-sm text-gray-800';
+      const off = 'flex-1 py-1.5 rounded-md font-medium text-gray-500 hover:text-gray-700';
+      document.getElementById('authTabSignin').className = mode==='signin' ? on : off;
+      document.getElementById('authTabSignup').className = mode==='signup' ? on : off;
+      document.getElementById('authSubmit').textContent = mode==='signin' ? s.authSubmitSignin : s.authSubmitSignup;
+      document.getElementById('authPassword').setAttribute('autocomplete', mode==='signin' ? 'current-password' : 'new-password');
+      hideAuthMsgs();
+    }
+    function hideAuthMsgs(){ document.getElementById('authError').classList.add('hidden'); document.getElementById('authInfo').classList.add('hidden'); }
+    function showAuthError(msg){ const e=document.getElementById('authError'); e.textContent=msg; e.classList.remove('hidden'); document.getElementById('authInfo').classList.add('hidden'); }
+    function showAuthInfo(msg){ const e=document.getElementById('authInfo'); e.textContent=msg; e.classList.remove('hidden'); document.getElementById('authError').classList.add('hidden'); }
+
+    async function handleAuthSubmit(){
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value;
+      const btn = document.getElementById('authSubmit');
+      const s = strings[currentLang];
+      if(!email || !password){ showAuthError(s.authMissing); return; }
+      btn.disabled = true;
+      try{
+        if(authMode === 'signup'){
+          const { data, error } = await sb.auth.signUp({ email, password });
+          if(error){ showAuthError(error.message); return; }
+          if(!data.session){ showAuthInfo(s.authConfirmSent); } // email confirmation is enabled
+        } else {
+          const { error } = await sb.auth.signInWithPassword({ email, password });
+          if(error){ showAuthError(error.message); return; }
+        }
+      } catch(e){ showAuthError(e.message || String(e)); }
+      finally { btn.disabled = false; }
+    }
+    async function handleLogout(){ await sb.auth.signOut(); }
+
+    function applyAuthState(session){
+      currentUser = (session && session.user) ? session.user : null;
+      const authScreen = document.getElementById('authScreen');
+      const userMenu = document.getElementById('userMenu');
+      if(currentUser){
+        authScreen.classList.add('hidden');
+        userMenu.classList.remove('hidden'); userMenu.classList.add('flex');
+        document.getElementById('userEmail').textContent = currentUser.email || '';
+        document.getElementById('authPassword').value = '';
+        onLogin();
+      } else {
+        authScreen.classList.remove('hidden');
+        userMenu.classList.add('hidden'); userMenu.classList.remove('flex');
+      }
+    }
+    // Runs once a user is authenticated
+    async function onLogin(){
+      await loadUserOverrides();
+      if(currentMunicipality) loadMunicipalityData();
+      await loadScenarios(); updateScenarioCount();
+    }
+
+    // ===== Per-user source-data overrides =====
+    function applyUserOverride(key){
+      const base = municipalitiesBaseline[key];
+      if(!base) return;
+      const ov = userOverrides[key];
+      const rec = Object.assign({}, base.recyclables, (ov && ov.recyclables) || {});
+      const non = Object.assign({}, base.nonRecyclables, (ov && ov.nonRecyclables) || {});
+      const total = Object.values(rec).reduce((s,v)=>s+v,0) + Object.values(non).reduce((s,v)=>s+v,0);
+      municipalities[key] = { recyclables: rec, nonRecyclables: non, totalWaste: total };
+    }
+    async function loadUserOverrides(){
+      userOverrides = {};
+      if(!currentUser) return;
+      const { data, error } = await sb.from('data_overrides').select('municipality, overrides');
+      if(error){ console.warn('overrides load:', error.message); return; }
+      (data||[]).forEach(row=>{ userOverrides[row.municipality] = row.overrides; });
+    }
+    async function saveUserOverride(key){
+      if(!currentUser || !key) return;
+      const ov = { recyclables: municipalities[key].recyclables, nonRecyclables: municipalities[key].nonRecyclables };
+      userOverrides[key] = ov;
+      const { error } = await sb.from('data_overrides').upsert({ municipality: key, overrides: ov }, { onConflict: 'user_id,municipality' });
+      if(error) console.warn('override save:', error.message);
+    }
+    async function resetUserOverride(key){
+      if(!key) return;
+      delete userOverrides[key];
+      if(currentUser){ const { error } = await sb.from('data_overrides').delete().eq('municipality', key); if(error) console.warn('override reset:', error.message); }
+      applyUserOverride(key);
+      loadMunicipalityData();
+    }
+
+    // ===== Scenario snapshots =====
+    function writeEconomicInputs(){
+      const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.value=v; };
+      set('inpHorizon', economicState.horizonYears);
+      set('inpLevyRise', (economicState.levyAnnualRise||0)*100);
+      set('inpOpsRise', (economicState.operationsAnnualRise||0)*100);
+      set('inpRampUp', economicState.rampUpYears);
+      set('inpInvestment', economicState.investment);
+      set('inpTreatment', economicState.treatmentCostPerTon);
+      set('inpPopGrowth', (economicState.populationGrowth||0)*100);
+      set('inpBaseLevy', economicState.baseLevyPerTon||0);
+      set('inpOpsCost', economicState.operationsCostPerTon||0);
+      set('inpSiteEntry', economicState.siteEntryCostPerTon||0);
+      set('inpOverallCost', (economicState.baseLevyPerTon||0)+(economicState.operationsCostPerTon||0)+(economicState.siteEntryCostPerTon||0));
+    }
+    function captureScenario(){
+      const cur = currentMunicipality;
+      const m = computeMultiYear();
+      const payload = {
+        v: 1,
+        municipality: cur,
+        costPerTon: parseFloat(costPerTonInput.value)||0,
+        economicState: JSON.parse(JSON.stringify(economicState)),
+        selectedStream: selectedStream,
+        streamEditMode: streamEditMode,
+        streamRecovery: {...streamRecovery},
+        pointOpCost: {...pointOpCost},
+        manualSimulated: {...manualSimulated},
+        binsState: {...binsState},
+        landfillSimulated: landfillSimulated,
+        sourceData: cur ? { recyclables: {...municipalities[cur].recyclables}, nonRecyclables: {...municipalities[cur].nonRecyclables} } : null
+      };
+      const summary = {
+        years: m.years, statusQuoCum: m.statusQuoCum, improvedCum: m.improvedCum, simImprovedCum: m.simImprovedCum,
+        netSaving: m.netSaving, avgAnnual: m.avgAnnual, payback: m.payback, roi: m.roi,
+        simNetSaving: m.simNetSaving, simAvgAnnual: m.simAvgAnnual, simPayback: m.simPayback, simRoi: m.simRoi,
+        horizon: economicState.horizonYears
+      };
+      return { payload, summary };
+    }
+    function restoreScenario(p){
+      if(!p) return;
+      const cur = p.municipality;
+      if(cur && p.sourceData){
+        const rec = {...p.sourceData.recyclables}, non = {...p.sourceData.nonRecyclables};
+        municipalities[cur] = { recyclables: rec, nonRecyclables: non, totalWaste: Object.values(rec).reduce((s,v)=>s+v,0)+Object.values(non).reduce((s,v)=>s+v,0) };
+      }
+      restoringScenario = true;
+      try {
+        municipalitySelect.value = cur;
+        costPerTonInput.value = p.costPerTon;
+        loadMunicipalityData(); // renders base + resets sim from data (override overlay suppressed)
+        economicState = JSON.parse(JSON.stringify(p.economicState));
+        selectedStream = p.selectedStream || null;
+        streamEditMode = p.streamEditMode || 'percent';
+        streamRecovery = {...p.streamRecovery};
+        pointOpCost = {...p.pointOpCost};
+        manualSimulated = {...p.manualSimulated};
+        binsState = {...p.binsState};
+        landfillSimulated = p.landfillSimulated;
+        writeEconomicInputs();
+        // re-render sim view from restored state
+        Object.keys(municipalities[cur].recyclables).forEach(writeFinalIntoInput);
+        binsConfig.forEach(cfg=>{ updateBinCountDisplay(cfg.id); updateBinPotentialCell(cfg.id); });
+        document.querySelectorAll('.simulated-value').forEach(el=>{ const type=el.getAttribute('data-type'); const base=municipalities[cur].nonRecyclables[type]; el.textContent=(type==='General Household Landfill'?landfillSimulated:base).toFixed(2); });
+        setButtonsAvailability(); updateSummary();
+        // re-render dashboard from restored state
+        updateStreamControls(); buildStreamDashboard(); refreshModel();
+      } finally { restoringScenario = false; }
+    }
+
+    let scenarioCache = []; // last-loaded list of the user's scenarios
+    async function loadScenarios(){
+      if(!currentUser) return [];
+      const { data, error } = await sb.from('scenarios').select('id, title, description, municipality, summary, created_at').order('created_at', { ascending: false });
+      if(error){ console.warn('scenarios load:', error.message); return []; }
+      scenarioCache = data || [];
+      return scenarioCache;
+    }
+    async function saveScenario(title, description){
+      if(!currentUser) return { error: 'not signed in' };
+      const { payload, summary } = captureScenario();
+      const { error } = await sb.from('scenarios').insert({ title, description: description||'', municipality: payload.municipality, payload, summary });
+      return { error: error ? error.message : null };
+    }
+    async function deleteScenario(id){
+      const { error } = await sb.from('scenarios').delete().eq('id', id);
+      if(error) console.warn('scenario delete:', error.message);
+    }
+    async function loadScenarioById(id){
+      const { data, error } = await sb.from('scenarios').select('payload').eq('id', id).single();
+      if(error){ console.warn('scenario fetch:', error.message); return; }
+      restoreScenario(data.payload);
+    }
+
+    // ===== Scenarios UI =====
+    const COMPARE_COLORS = ['#10b981','#6366f1','#f59e0b','#ef4444','#0ea5e9','#a855f7','#ec4899','#84cc16'];
+    let compareChartObj = null;
+    let selectedScenarioIds = [];
+
+    function updateScenarioCount(){ const el=document.getElementById('scenarioCount'); if(el) el.textContent = scenarioCache.length; }
+
+    function openSaveScenarioModal(){
+      if(!currentMunicipality){ return; }
+      document.getElementById('scTitleInput').value = '';
+      document.getElementById('scDescInput').value = '';
+      document.getElementById('scSaveError').classList.add('hidden');
+      document.getElementById('saveScenarioModal').classList.remove('hidden');
+      document.getElementById('scTitleInput').focus();
+    }
+    function closeSaveScenarioModal(){ document.getElementById('saveScenarioModal').classList.add('hidden'); }
+    async function handleSaveScenarioConfirm(){
+      const s = strings[currentLang];
+      const title = document.getElementById('scTitleInput').value.trim();
+      const desc = document.getElementById('scDescInput').value.trim();
+      const err = document.getElementById('scSaveError');
+      if(!title){ err.textContent = s.scTitleRequired; err.classList.remove('hidden'); return; }
+      const btn = document.getElementById('scSaveConfirm'); btn.disabled = true;
+      const { error } = await saveScenario(title, desc);
+      btn.disabled = false;
+      if(error){ err.textContent = error; err.classList.remove('hidden'); return; }
+      closeSaveScenarioModal();
+      await loadScenarios(); updateScenarioCount();
+    }
+
+    async function openScenariosModal(){
+      await loadScenarios(); updateScenarioCount();
+      selectedScenarioIds = [];
+      document.getElementById('compareResult').classList.add('hidden');
+      renderScenariosList();
+      document.getElementById('scenariosModal').classList.remove('hidden');
+    }
+    function closeScenariosModal(){ document.getElementById('scenariosModal').classList.add('hidden'); }
+
+    function renderScenariosList(){
+      const s = strings[currentLang];
+      const list = document.getElementById('scenariosList');
+      const empty = document.getElementById('scenariosEmpty');
+      if(!scenarioCache.length){ list.innerHTML=''; empty.classList.remove('hidden'); document.getElementById('compareSelectedBtn').classList.add('hidden'); return; }
+      empty.classList.add('hidden');
+      list.innerHTML = scenarioCache.map(sc=>{
+        const date = new Date(sc.created_at).toLocaleDateString(currentLang==='he'?'he-IL':'en-GB');
+        const muniOpt = sc.municipality ? [...municipalitySelect.options].find(o=>o.value===sc.municipality) : null;
+        const muniLabel = muniOpt ? muniOpt.text : (sc.municipality || '');
+        const checked = selectedScenarioIds.includes(sc.id) ? 'checked' : '';
+        return `<div class="flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:border-gray-200 transition-all">
+          <input type="checkbox" data-sc-check="${sc.id}" ${checked} class="mt-1 accent-indigo-600">
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-semibold text-gray-700">${escapeHtml(sc.title)}</div>
+            ${sc.description ? `<div class="text-xs text-gray-400 mt-0.5">${escapeHtml(sc.description)}</div>` : ''}
+            <div class="text-[11px] text-gray-300 mt-1">${escapeHtml(muniLabel)} · ${date}</div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button data-sc-load="${sc.id}" class="px-2.5 py-1 bg-green-50 hover:bg-green-100 text-green-700 rounded-md text-xs font-medium transition-all">${s.scLoad}</button>
+            <button data-sc-del="${sc.id}" class="px-2 py-1 text-gray-300 hover:text-red-500 transition-all"><i class="fas fa-trash text-xs"></i></button>
+          </div>
+        </div>`;
+      }).join('');
+      list.querySelectorAll('[data-sc-load]').forEach(b=>b.addEventListener('click', async ()=>{ await loadScenarioById(b.getAttribute('data-sc-load')); closeScenariosModal(); }));
+      list.querySelectorAll('[data-sc-del]').forEach(b=>b.addEventListener('click', async ()=>{ await deleteScenario(b.getAttribute('data-sc-del')); await loadScenarios(); updateScenarioCount(); selectedScenarioIds = selectedScenarioIds.filter(id=>scenarioCache.some(x=>x.id===id)); renderScenariosList(); }));
+      list.querySelectorAll('[data-sc-check]').forEach(c=>c.addEventListener('change', ()=>{
+        const id = c.getAttribute('data-sc-check');
+        if(c.checked){ if(!selectedScenarioIds.includes(id)) selectedScenarioIds.push(id); }
+        else { selectedScenarioIds = selectedScenarioIds.filter(x=>x!==id); }
+        document.getElementById('compareSelectedBtn').classList.toggle('hidden', selectedScenarioIds.length < 2);
+        document.getElementById('compareSelectedBtn').classList.toggle('flex', selectedScenarioIds.length >= 2);
+      }));
+      document.getElementById('compareSelectedBtn').classList.toggle('hidden', selectedScenarioIds.length < 2);
+      document.getElementById('compareSelectedBtn').classList.toggle('flex', selectedScenarioIds.length >= 2);
+    }
+    function escapeHtml(str){ return String(str==null?'':str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    function renderCompare(){
+      const s = strings[currentLang];
+      const sel = selectedScenarioIds.map(id=>scenarioCache.find(x=>x.id===id)).filter(Boolean);
+      if(sel.length < 2) return;
+      // KPI table
+      const rows = [
+        ['', sel.map(sc=>`<th class="px-2 py-1.5 text-start font-semibold text-gray-700">${escapeHtml(sc.title)}</th>`).join('')],
+        [s.kpiCumulativeLabel, sel.map(sc=>`<td class="px-2 py-1.5 tabular-nums text-green-600 font-semibold">₪${formatNumber(sc.summary.netSaving)}</td>`).join('')],
+        [s.kpiAnnualLabel, sel.map(sc=>`<td class="px-2 py-1.5 tabular-nums">₪${formatNumber(sc.summary.avgAnnual)}</td>`).join('')],
+        [s.kpiPaybackLabel, sel.map(sc=>`<td class="px-2 py-1.5 tabular-nums text-blue-600">${sc.summary.payback==null? s.paybackNever : s.paybackYearUnit(sc.summary.payback)}</td>`).join('')],
+        [s.kpiRoiLabel, sel.map(sc=>`<td class="px-2 py-1.5 tabular-nums text-amber-600">${sc.summary.roi==null?'—':Math.round(sc.summary.roi)+'%'}</td>`).join('')]
+      ];
+      document.getElementById('compareTable').innerHTML =
+        `<thead><tr><th class="px-2 py-1.5"></th>${rows[0][1]}</tr></thead><tbody>` +
+        rows.slice(1).map(r=>`<tr class="border-t border-gray-100"><td class="px-2 py-1.5 text-gray-400">${r[0]}</td>${r[1]}</tr>`).join('') +
+        `</tbody>`;
+      // overlay chart: cumulative saving (statusQuo - improved) per year, per scenario
+      const maxLen = Math.max(...sel.map(sc=>sc.summary.years.length));
+      const labels = Array.from({length:maxLen}, (_,i)=>i+1);
+      const datasets = sel.map((sc,i)=>{
+        const sq = sc.summary.statusQuoCum, im = sc.summary.improvedCum;
+        const data = sq.map((v,t)=> v - im[t]);
+        return { label: sc.title, data, borderColor: COMPARE_COLORS[i%COMPARE_COLORS.length], backgroundColor:'transparent', fill:false, tension:0.25, pointRadius:0, borderWidth:2 };
+      });
+      const ctx = document.getElementById('compareChart').getContext('2d');
+      if(compareChartObj) compareChartObj.destroy();
+      compareChartObj = new Chart(ctx, { type:'line', data:{labels, datasets}, options:{
+        responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+        plugins:{ legend:{labels:{boxWidth:12,font:{size:11}}}, tooltip:{callbacks:{ title:(it)=> it.length? s.chartTooltipTitle(parseInt(it[0].label,10)||(it[0].dataIndex+1)) : '', label:(c)=> c.dataset.label+': ₪'+formatNumber(c.parsed.y) }} },
+        scales:{ x:{title:{display:true,text:s.chartXAxis,font:{size:11}},grid:{display:false}}, y:{ticks:{callback:v=>'₪'+(v>=1000?(v/1000).toFixed(0)+'K':v)},grid:{color:'#f1f5f9'}} }
+      }});
+      document.getElementById('compareResult').classList.remove('hidden');
+      document.getElementById('compareResult').scrollIntoView({block:'nearest'});
+    }
+
+    document.getElementById('saveScenarioBtn').addEventListener('click', openSaveScenarioModal);
+    document.getElementById('scSaveCancel').addEventListener('click', closeSaveScenarioModal);
+    document.getElementById('scSaveConfirm').addEventListener('click', handleSaveScenarioConfirm);
+    document.getElementById('openScenariosBtn').addEventListener('click', openScenariosModal);
+    document.getElementById('scenariosClose').addEventListener('click', closeScenariosModal);
+    document.getElementById('compareSelectedBtn').addEventListener('click', renderCompare);
+
+    document.getElementById('authTabSignin').addEventListener('click', ()=>setAuthMode('signin'));
+    document.getElementById('authTabSignup').addEventListener('click', ()=>setAuthMode('signup'));
+    document.getElementById('authSubmit').addEventListener('click', handleAuthSubmit);
+    document.getElementById('authPassword').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') handleAuthSubmit(); });
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    sb.auth.onAuthStateChange((_event, session)=>applyAuthState(session));
+    sb.auth.getSession().then(({ data })=>applyAuthState(data.session));
+    setAuthMode('signin');
   </script>
 </body>
 </html>
