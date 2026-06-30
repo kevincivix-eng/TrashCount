@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- TrashCount / muniwaste — Beta 0.4.0 -->
+<!-- TrashCount / muniwaste — Beta 0.5.0 -->
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -376,6 +376,10 @@
             <input id="inpOpsRise" type="number" min="0" step="0.5" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
           </div>
           <div>
+            <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpSiteEntryLabel">עלות כניסה לאתר ₪/טון</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpSiteEntryTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">עלות הכניסה/שקילה באתר ההטמנה, לטון. רכיב נוסף במחיר השער — עריכתו מתווספת לעלות הכללית (כללית = היטל + תפעול + כניסה לאתר).</span></span></label>
+            <input id="inpSiteEntry" type="number" min="0" step="1" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+          </div>
+          <div>
             <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpHorizonLabel">אופק (שנים)</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpHorizonTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">מספר השנים שהמודל מחשב קדימה. אופק ארוך יותר ⇐ חיסכון מצטבר גדול יותר, כי ההיטל ממשיך לטפס.</span></span></label>
             <input id="inpHorizon" type="number" min="1" max="30" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
           </div>
@@ -394,6 +398,14 @@
           <div>
             <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpTreatmentLabel">עלות מיחזור לטון מוסט (₪)</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpTreatmentTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">כמה עולה לטפל/למחזר טון שהוסט מהטמנה. יכול להיות 0, או שלילי אם יש הכנסה ממכירת החומר. החיסכון לטון = מחיר השער − ערך זה.</span></span></label>
             <input id="inpTreatment" type="number" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+          </div>
+          <div>
+            <button type="button" id="pointOpToggle" class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1 w-full text-start group">
+              <span id="pointOpLabel">עלות תפעול פסולת נקודתית ₪/טון</span>
+              <span class="relative group/tip inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="pointOpTip" class="hidden group-hover/tip:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">עלות תפעול ייעודית לכל זרם פסולת, מתווספת לעלות המיחזור לטון מוסט. כשבחרת זרם בודד למעלה — רק השורה שלו משפיעה; ב"כל הזרמים" נלקח ממוצע משוקלל לפי הטונות.</span></span>
+              <i id="pointOpChevron" class="fas fa-chevron-down text-[10px] text-gray-400 group-hover:text-gray-600 ms-auto transition-transform"></i>
+            </button>
+            <div id="pointOpBody" class="hidden space-y-1.5 mt-1 p-2 rounded-lg bg-gray-50 border border-gray-100"></div>
           </div>
           <div>
             <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpPopGrowthLabel">צמיחת אוכלוסייה לשנה (%)</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpPopGrowthTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">גידול שנתי בכמות הפסולת הכוללת. מגדיל גם הטמנה וגם הסטה באותו שיעור, כך שאחוז המיחזור נשמר.</span></span></label>
@@ -691,16 +703,27 @@
       en: { "Organic":"Organic", "Paper and Cardboard":"Paper & Cardboard", "Plastic":"Plastic", "Glass":"Glass", "Metal":"Metal", "Textile":"Textile", "Other / Inert":"Other / Inert" }
     };
 
+    // Maps each simulation recyclable material to one of the 7 model streams (for stream-aware point-cost weighting)
+    const recyclableToStream = {
+      "Paper":"Paper and Cardboard", "Cardboard":"Paper and Cardboard",
+      "Plastic":"Plastic", "Orange Bin (Plastic Packaging)":"Plastic", "Nylon (Non-Agricultural)":"Plastic",
+      "Glass":"Glass", "Metal and Iron":"Metal", "Textiles":"Textile",
+      "Home compost / Brown Bin / Organic Waste":"Organic", "Prunings":"Organic",
+      "Electronic Waste":"Other / Inert", "Batteries and Accumulators":"Other / Inert", "Oil":"Other / Inert",
+      "Tires":"Other / Inert", "Bulky Waste":"Other / Inert", "Other":"Other / Inert", "Refuse-Derived Fuel (RDF)":"Other / Inert"
+    };
+
     // Multi-year economic model defaults (all editable in UI)
     const economicDefaults = {
       horizonYears: 10, baseLevyPerTon: 0, levyAnnualRise: 0.05,
-      operationsCostPerTon: null, operationsAnnualRise: 0,
+      operationsCostPerTon: null, operationsAnnualRise: 0, siteEntryCostPerTon: 0,
       rampUpYears: 3, investment: 0, treatmentCostPerTon: 0, populationGrowth: 0.02, divertedTonsTarget: null
     };
     let economicState = { ...economicDefaults };
     let dashboardChart = null;
     let selectedStream = null;      // null = all streams feed the model
     let streamRecovery = {};        // per-stream recovery fraction (editable)
+    let pointOpCost = {};           // per-stream point waste-operation cost ₪/ton (added to recycling cost)
     let streamEditMode = 'percent'; // 'percent' | 'tons'
 
     // --- i18n ---
@@ -767,6 +790,8 @@
         modelStreamPrefix: 'הזרם הנבחר למודל:', modelStreamAll: 'כל הזרמים',
         inpHorizonLabel: 'אופק (שנים)', inpBaseLevyLabel: 'היטל הטמנה ₪/טון', inpLevyRiseLabel: 'עליית היטל לשנה (%)',
         inpOverallCostLabel: 'עלות כללית ₪/טון', inpOpsCostLabel: 'עלות תפעול ₪/טון', inpOpsRiseLabel: 'עליית תפעול לשנה (%)',
+        inpSiteEntryLabel: 'עלות כניסה לאתר ₪/טון', inpSiteEntryTip: 'עלות הכניסה/שקילה באתר ההטמנה, לטון. רכיב נוסף במחיר השער — עריכתו מתווספת לעלות הכללית (כללית = היטל + תפעול + כניסה לאתר).',
+        pointOpLabel: 'עלות תפעול פסולת נקודתית ₪/טון', pointOpTip: 'עלות תפעול ייעודית לכל זרם פסולת, מתווספת לעלות המיחזור לטון מוסט. כשבחרת זרם בודד למעלה — רק השורה שלו משפיעה; ב"כל הזרמים" נלקח ממוצע משוקלל לפי הטונות.',
         inpHorizonTip: 'מספר השנים שהמודל מחשב קדימה. אופק ארוך יותר ⇐ חיסכון מצטבר גדול יותר, כי ההיטל ממשיך לטפס.',
         inpOverallCostTip: 'מחיר השער המלא לטון בהטמנה — סך ההיטל + התפעול. זהו הערך שהוזן במסך הראשון, וניתן לעדכן אותו גם כאן. עריכתו מאזנת את עלות התפעול (ההיטל נשאר).',
         inpBaseLevyTip: 'רכיב המס הממשלתי מתוך מחיר השער. רק הוא מטפס לפי "עליית היטל". עריכתו מעדכנת את העלות הכללית (כללית = היטל + תפעול).',
@@ -859,6 +884,8 @@
         modelStreamPrefix: 'Stream feeding the model:', modelStreamAll: 'All streams',
         inpHorizonLabel: 'Horizon (years)', inpBaseLevyLabel: 'Landfill levy ₪/ton', inpLevyRiseLabel: 'Levy rise per year (%)',
         inpOverallCostLabel: 'Overall cost ₪/ton', inpOpsCostLabel: 'Operations cost ₪/ton', inpOpsRiseLabel: 'Operations rise per year (%)',
+        inpSiteEntryLabel: 'Site entry cost ₪/ton', inpSiteEntryTip: 'The gate/weighing entry fee at the landfill site, per ton. Another component of the gate fee — editing it adds to the overall cost (overall = levy + operations + site entry).',
+        pointOpLabel: 'Point waste-operation cost ₪/ton', pointOpTip: 'A dedicated operation cost per waste stream, added to the recycling cost per diverted ton. When a single stream is selected above, only its row applies; for "all streams" a tons-weighted average is used.',
         inpHorizonTip: 'Number of years the model projects forward. A longer horizon ⇒ larger cumulative saving, because the levy keeps climbing.',
         inpOverallCostTip: 'The full gate fee per landfilled ton — levy + operations. This is the value entered on the first screen and can be updated here too. Editing it re-balances operations (levy stays).',
         inpBaseLevyTip: 'The government-tax component of the gate fee. Only this part escalates by "Levy rise". Editing it updates the overall cost (overall = levy + operations).',
@@ -968,6 +995,9 @@
       setText('inpPopGrowthLabel', s.inpPopGrowthLabel); setText('popGrowthNote', s.popGrowthNote);
       setText('inpOverallCostLabel', s.inpOverallCostLabel); setText('inpOpsCostLabel', s.inpOpsCostLabel);
       setText('inpOpsRiseLabel', s.inpOpsRiseLabel);
+      setText('inpSiteEntryLabel', s.inpSiteEntryLabel); setText('inpSiteEntryTip', s.inpSiteEntryTip);
+      setText('pointOpLabel', s.pointOpLabel); setText('pointOpTip', s.pointOpTip);
+      renderPointOpCosts();
       setText('inpHorizonTip', s.inpHorizonTip);
       setText('inpOverallCostTip', s.inpOverallCostTip); setText('inpBaseLevyTip', s.inpBaseLevyTip);
       setText('inpLevyRiseTip', s.inpLevyRiseTip); setText('inpOpsCostTip', s.inpOpsCostTip);
@@ -1599,6 +1629,49 @@
     function streamTons(key){ return householdLandfillTons() * wasteComposition[key].share; }
     function streamRecoveryOf(key){ return (key in streamRecovery) ? streamRecovery[key] : wasteComposition[key].recovery; }
     function streamDivertableTons(key){ return streamTons(key) * streamRecoveryOf(key); }
+    function pointOpCostOf(key){ return (key in pointOpCost) ? (pointOpCost[key] || 0) : 0; }
+    // Effective point waste-operation cost added to recycling cost/ton.
+    // Single stream selected → just that stream; "all streams" → tons-weighted average across streams.
+    function effectivePointCost(){
+      if(selectedStream && (selectedStream in wasteComposition)) return pointOpCostOf(selectedStream);
+      let tons = 0, weighted = 0;
+      for(const k in wasteComposition){ const t = streamDivertableTons(k); tons += t; weighted += t * pointOpCostOf(k); }
+      return tons > 0 ? weighted / tons : 0;
+    }
+    // Per-stream tons actually diverted in the SIMULATION (recyclable materials mapped to the 7 model streams)
+    function simDivertedByStream(){
+      const out = {};
+      if(!currentMunicipality) return out;
+      const data = municipalities[currentMunicipality];
+      Object.keys(data.recyclables).forEach(k=>{
+        const delta = Math.max(0, getFinalSimulatedFor(k) - (data.recyclables[k] || 0));
+        if(delta <= 0) return;
+        const st = recyclableToStream[k] || "Other / Inert";
+        out[st] = (out[st] || 0) + delta;
+      });
+      return out;
+    }
+    // Point cost for the SIMULATION scenario, weighted by the simulation's own per-stream diverted tons
+    function simEffectivePointCost(){
+      const byStream = simDivertedByStream();
+      let tons = 0, weighted = 0;
+      for(const st in byStream){ tons += byStream[st]; weighted += byStream[st] * pointOpCostOf(st); }
+      return tons > 0 ? weighted / tons : 0;
+    }
+    // Render the per-stream point-cost rows; only the focused stream shows when one is selected up top
+    function renderPointOpCosts(){
+      const body = document.getElementById('pointOpBody');
+      if(!body) return;
+      const single = selectedStream && (selectedStream in wasteComposition);
+      const keys = single ? [selectedStream] : Object.keys(wasteComposition);
+      body.innerHTML = keys.map(k=>{
+        const label = labelsStreams[currentLang][k] || k;
+        return `<div class="flex items-center gap-2"><span class="text-[11px] text-gray-500 flex-1 truncate" title="${label}">${label}</span><input type="number" min="0" step="1" data-stream="${k}" value="${pointOpCostOf(k)}" class="pointop-edit w-20 px-2 py-1 border border-gray-200 rounded-md text-xs tabular-nums bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500"></div>`;
+      }).join('');
+      body.querySelectorAll('.pointop-edit').forEach(inp=>{
+        inp.addEventListener('input', ()=>{ pointOpCost[inp.getAttribute('data-stream')] = Math.max(0, parseFloat(inp.value) || 0); refreshModel(); });
+      });
+    }
     function streamOpportunity(key){
       // Present-day annual opportunity = divertable tons x current gate fee (already blended treatment+levy) x saving factor.
       const cost = parseFloat(costPerTonInput.value) || 0;
@@ -1640,6 +1713,7 @@
         tonBtn.className = streamEditMode === 'tons' ? a : i;
       }
       updateModelStreamBadge();
+      renderPointOpCosts();
     }
 
     function updateModelStreamBadge(){
@@ -1720,15 +1794,20 @@
       // The landfill gate fee (cost) is a blended price split into two components: levy + operations.
       // Each escalates at its OWN annual rate; the gate fee per year = levy_t + operations_t.
       const baseLevy = Math.min(economicState.baseLevyPerTon || 0, cost);
+      const siteEntry = Math.max(0, economicState.siteEntryCostPerTon || 0); // site-entry fee — another flat gate component
       const operations = (economicState.operationsCostPerTon != null)
         ? Math.max(0, economicState.operationsCostPerTon)
-        : Math.max(0, cost - baseLevy);
+        : Math.max(0, cost - baseLevy - siteEntry);
       const rise = economicState.levyAnnualRise || 0;
       const opsRise = economicState.operationsAnnualRise || 0;
       const popGrowth = economicState.populationGrowth || 0;
       const ramp = Math.max(1, economicState.rampUpYears|0);
       const invest = economicState.investment || 0;
-      const treat = economicState.treatmentCostPerTon || 0;
+      // Recycling cost per diverted ton = base treatment + point waste-operation cost.
+      // Opportunity uses the streams-table weighting; the simulation uses its OWN per-stream diverted mix.
+      const baseTreat = economicState.treatmentCostPerTon || 0;
+      const treat = baseTreat + effectivePointCost();
+      const simTreat = baseTreat + simEffectivePointCost();
       const landfill = landfillTotalTons();
       const target = Math.min(Math.max(0, modelTargetTons()), landfill);
       const simTarget = Math.min(Math.max(0, simulatedDivertedTons()), landfill);
@@ -1739,14 +1818,14 @@
       for(let t=0; t<H; t++){
         const levy = baseLevy * Math.pow(1+rise, t);
         const ops = operations * Math.pow(1+opsRise, t);
-        const gate = levy + ops; // gate fee = rising levy + rising operations (each at its own rate)
+        const gate = levy + ops + siteEntry; // gate fee = rising levy + rising operations + flat site-entry
         const grow = Math.pow(1+popGrowth, t); // population growth scales total waste each year
         const landfillT = landfill * grow;
         const diverted = target * Math.min(1, (t+1)/ramp) * grow; // diverted scales too → recycling share preserved
         const simDiv = simTarget * Math.min(1, (t+1)/ramp) * grow;
         const sq = landfillT * gate;
         const im = (landfillT - diverted) * gate + diverted * treat;
-        const simIm = (landfillT - simDiv) * gate + simDiv * treat;
+        const simIm = (landfillT - simDiv) * gate + simDiv * simTreat;
         sqCum += sq; imCum += im; simCum += simIm;
         cumSaving += (sq - im); totalSaving += (sq - im); simTotalSaving += (sq - simIm);
         simCumSaving += (sq - simIm);
@@ -1783,14 +1862,17 @@
       const canvas = document.getElementById('multiYearChart');
       if(!canvas) return;
       const s = strings[currentLang];
-      const data = {
-        labels: m.years,
-        datasets: [
-          { label: s.chartStatusQuo, data: m.statusQuoCum, borderColor: '#ef4444', backgroundColor: 'transparent', fill: false, borderWidth: 2.5, tension: 0.25, pointRadius: 0 },
-          { label: s.chartSimImproved, data: m.simImprovedCum, borderColor: '#6366f1', backgroundColor: 'transparent', fill: false, borderDash: [6,4], tension: 0.25, pointRadius: 0, borderWidth: 2 },
-          { label: s.chartImproved, data: m.improvedCum, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.14)', fill: 0, tension: 0.25, pointRadius: 0, borderWidth: 2 }
-        ]
-      };
+      // A collapsed KPI group also hides its line; status-quo (index 0) is always the baseline so the fill anchor stays valid
+      const oppBody = document.getElementById('kpiOppBody');
+      const simBody = document.getElementById('kpiSimBody');
+      const showOpp = !(oppBody && oppBody.classList.contains('hidden'));
+      const showSim = !(simBody && simBody.classList.contains('hidden'));
+      const datasets = [
+        { label: s.chartStatusQuo, data: m.statusQuoCum, borderColor: '#ef4444', backgroundColor: 'transparent', fill: false, borderWidth: 2.5, tension: 0.25, pointRadius: 0 }
+      ];
+      if(showSim) datasets.push({ label: s.chartSimImproved, data: m.simImprovedCum, borderColor: '#6366f1', backgroundColor: 'transparent', fill: false, borderDash: [6,4], tension: 0.25, pointRadius: 0, borderWidth: 2 });
+      if(showOpp) datasets.push({ label: s.chartImproved, data: m.improvedCum, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.14)', fill: 0, tension: 0.25, pointRadius: 0, borderWidth: 2 });
+      const data = { labels: m.years, datasets };
       const opts = {
         responsive: true, maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
@@ -1833,16 +1915,19 @@
       streamEditMode = 'percent';
       streamRecovery = {};
       for(const k in wasteComposition) streamRecovery[k] = wasteComposition[k].recovery;
+      pointOpCost = {};
+      for(const k in wasteComposition) pointOpCost[k] = 0;
       const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.value = val; };
       set('inpHorizon', economicDefaults.horizonYears);
       set('inpBaseLevy', economicDefaults.baseLevyPerTon);
       set('inpLevyRise', economicDefaults.levyAnnualRise * 100);
       set('inpOpsRise', economicDefaults.operationsAnnualRise * 100);
+      set('inpSiteEntry', economicDefaults.siteEntryCostPerTon);
       set('inpRampUp', economicDefaults.rampUpYears);
       set('inpInvestment', economicDefaults.investment);
       set('inpTreatment', economicDefaults.treatmentCostPerTon);
       set('inpPopGrowth', economicDefaults.populationGrowth * 100);
-      // Initialise the linked cost trio (overall / levy / operations) from the first-screen overall cost
+      // Initialise the linked cost components (overall / levy / operations / site-entry) from the first-screen overall cost
       set('inpOverallCost', parseFloat(costPerTonInput.value) || 0);
       reconcileCostComponents('costPerTon');
       updateStreamControls();
@@ -1855,43 +1940,49 @@
       economicState.levyAnnualRise = Math.max(0, num('inpLevyRise',0)) / 100;
       economicState.operationsCostPerTon = Math.max(0, num('inpOpsCost',0));
       economicState.operationsAnnualRise = Math.max(0, num('inpOpsRise',0)) / 100;
+      economicState.siteEntryCostPerTon = Math.max(0, num('inpSiteEntry',0));
       economicState.rampUpYears = Math.max(1, Math.round(num('inpRampUp',3)));
       economicState.investment = Math.max(0, num('inpInvestment',0));
       economicState.treatmentCostPerTon = num('inpTreatment',0);
       economicState.populationGrowth = Math.max(0, num('inpPopGrowth',0)) / 100;
     }
 
-    // Keep the three linked cost fields consistent: overall = levy + operations.
-    // Editing levy/operations recomputes the overall; editing the overall re-balances operations (levy fixed).
+    // Keep the linked cost fields consistent: overall = levy + operations + site-entry.
+    // Editing a component recomputes the overall; editing the overall re-balances operations (levy & site-entry fixed, cascading if needed).
     function reconcileCostComponents(source){
       const r2 = (x)=> Math.round(x*100)/100;
       const g = (id)=>{ const v=parseFloat(document.getElementById(id).value); return isNaN(v)?0:Math.max(0,v); };
       let overall = g('inpOverallCost');
       let levy = g('inpBaseLevy');
       let ops = g('inpOpsCost');
+      let site = g('inpSiteEntry');
       if(source === 'costPerTon'){ const v=parseFloat(costPerTonInput.value); overall = isNaN(v)?0:Math.max(0,v); }
       if(source === 'overall' || source === 'costPerTon'){
-        // overall is the anchor: operations absorbs the change; levy stays (capped at the overall)
-        if(overall < levy){ levy = overall; ops = 0; } else { ops = overall - levy; }
-      } else { // 'levy' or 'ops' edited → overall recomputes
-        overall = levy + ops;
+        // overall is the anchor: operations absorbs; if it would go negative, cascade-reduce site-entry then levy
+        let rem = overall - levy - site;
+        if(rem >= 0){ ops = rem; }
+        else { ops = 0; const rem2 = overall - levy; if(rem2 >= 0){ site = rem2; } else { site = 0; levy = overall; } }
+      } else { // 'levy' | 'ops' | 'site' edited → overall recomputes
+        overall = levy + ops + site;
       }
-      overall = r2(overall); levy = r2(levy); ops = r2(ops);
+      overall = r2(overall); levy = r2(levy); ops = r2(ops); site = r2(site);
       document.getElementById('inpOverallCost').value = overall;
       document.getElementById('inpBaseLevy').value = levy;
       document.getElementById('inpOpsCost').value = ops;
+      document.getElementById('inpSiteEntry').value = site;
       costPerTonInput.value = overall; // keep the first-screen field in sync
       economicState.baseLevyPerTon = levy;
       economicState.operationsCostPerTon = ops;
+      economicState.siteEntryCostPerTon = site;
     }
 
     ['inpHorizon','inpLevyRise','inpOpsRise','inpRampUp','inpInvestment','inpTreatment','inpPopGrowth'].forEach(id=>{
       document.getElementById(id).addEventListener('input', ()=>{ syncEconomicInputs(); buildStreamDashboard(); refreshModel(); });
     });
-    // Linked cost fields: each edit reconciles the trio (overall = levy + operations) before refreshing
-    ['inpOverallCost','inpBaseLevy','inpOpsCost'].forEach(id=>{
+    // Linked cost fields: each edit reconciles the components (overall = levy + operations + site-entry) before refreshing
+    ['inpOverallCost','inpBaseLevy','inpOpsCost','inpSiteEntry'].forEach(id=>{
       document.getElementById(id).addEventListener('input', ()=>{
-        const src = id==='inpOverallCost' ? 'overall' : (id==='inpBaseLevy' ? 'levy' : 'ops');
+        const src = id==='inpOverallCost' ? 'overall' : (id==='inpBaseLevy' ? 'levy' : (id==='inpSiteEntry' ? 'site' : 'ops'));
         reconcileCostComponents(src); syncEconomicInputs(); buildStreamDashboard(); refreshModel();
       });
     });
@@ -1904,9 +1995,18 @@
       if(!body || !chev) return;
       const collapsed = body.classList.toggle('hidden');
       chev.classList.toggle('rotate-180', collapsed);
+      if(currentMunicipality) renderMultiYearChart(computeMultiYear()); // hide/show the matching chart line
     }
     document.getElementById('kpiOppToggle').addEventListener('click', ()=>toggleKpiGroup('opp'));
     document.getElementById('kpiSimToggle').addEventListener('click', ()=>toggleKpiGroup('sim'));
+
+    // Collapse / expand the per-stream point waste-operation cost block
+    document.getElementById('pointOpToggle').addEventListener('click', ()=>{
+      const body = document.getElementById('pointOpBody');
+      const chev = document.getElementById('pointOpChevron');
+      const collapsed = body.classList.toggle('hidden');
+      chev.classList.toggle('rotate-180', !collapsed);
+    });
 
     document.getElementById('streamAllBtn').addEventListener('click', ()=>{ selectedStream = null; updateStreamControls(); buildStreamDashboard(); refreshModel(); });
     document.getElementById('streamUnitPct').addEventListener('click', ()=>{ streamEditMode = 'percent'; updateStreamControls(); buildStreamDashboard(); });
