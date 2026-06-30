@@ -56,6 +56,25 @@
     </div>
   </div>
 
+  <!-- ===== PUBLIC SHARE VIEW (read-only, no login) ===== -->
+  <div id="shareView" class="hidden fixed inset-0 z-[70] bg-slate-50 overflow-y-auto">
+    <div class="max-w-3xl mx-auto px-4 py-8">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center gap-1.5 mb-2 text-xs text-gray-400"><i class="fas fa-share-nodes"></i><span id="shareBadge">תרחיש משותף — לקריאה בלבד</span></div>
+        <h1 id="shareScTitle" class="text-xl font-bold text-gray-800"></h1>
+        <p id="shareScDesc" class="text-sm text-gray-500 mt-1"></p>
+        <p id="shareScMuni" class="text-xs text-gray-400 mt-1"></p>
+        <div id="shareKpis" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-5"></div>
+        <div class="relative mt-5" style="height:280px"><canvas id="shareChart"></canvas></div>
+        <p id="shareNotFound" class="hidden text-sm text-gray-400 py-8 text-center"></p>
+        <div class="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between gap-3 flex-wrap">
+          <p class="text-[11px] text-gray-300" id="sharePoweredBy">TrashCount · סימולטור ניהול פסולת</p>
+          <a id="shareOpenApp" href="#" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all"><span id="shareOpenAppLabel">פתח את הכלי המלא</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Header -->
   <header class="bg-gradient-to-l from-green-900 to-green-800 text-white shadow-md">
     <div class="container mx-auto px-6 py-5">
@@ -559,8 +578,29 @@
       <p id="scenariosEmpty" class="hidden px-5 py-8 text-center text-sm text-gray-400">עדיין לא שמרת תרחישים. לחץ "שמור תרחיש" בדשבורד.</p>
       <!-- compare result -->
       <div id="compareResult" class="hidden border-t border-gray-100 p-5 space-y-4 overflow-y-auto">
+        <div class="flex justify-end">
+          <button id="exportComparePdfBtn" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-medium transition-all border border-blue-200"><i class="fas fa-file-pdf text-[10px]"></i><span id="exportComparePdfLabel">ייצא PDF</span></button>
+        </div>
         <div class="overflow-x-auto"><table id="compareTable" class="w-full text-xs"></table></div>
         <div class="relative" style="height:260px"><canvas id="compareChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Link Modal -->
+  <div id="shareLinkModal" class="hidden fixed inset-0 z-[58] flex items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full">
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+        <i class="fas fa-share-nodes text-blue-600 text-sm"></i>
+        <h3 id="shareLinkTitle" class="text-sm font-semibold text-gray-700">קישור לשיתוף</h3>
+      </div>
+      <div class="px-5 py-4 space-y-2">
+        <p id="shareLinkNote" class="text-xs text-gray-400">כל אחד עם הקישור יוכל לצפות בתרחיש (לקריאה בלבד, ללא התחברות). הקישור הועתק.</p>
+        <input id="shareLinkInput" type="text" readonly dir="ltr" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs bg-gray-50 text-gray-600 select-all">
+      </div>
+      <div class="flex justify-end gap-3 px-5 py-4 border-t border-gray-100">
+        <button id="shareLinkCopy" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all"><span id="shareLinkCopyText">העתק</span></button>
+        <button id="shareLinkClose" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-sm font-medium transition-all"><span id="shareLinkCloseText">סגור</span></button>
       </div>
     </div>
   </div>
@@ -847,8 +887,13 @@
         saveScenarioLabel: 'שמור תרחיש', openScenariosLabel: 'התרחישים שלי',
         saveScenarioTitle: 'שמירת תרחיש', scTitleLabel: 'כותרת', scDescLabel: 'תיאור (מה נעשה בתרחיש)',
         scSaveCancelText: 'ביטול', scSaveConfirmText: 'שמור', scTitleRequired: 'נא להזין כותרת',
-        scenariosPanelTitle: 'התרחישים שלי', compareSelectedLabel: 'השווה נבחרים', scLoad: 'טען',
+        scenariosPanelTitle: 'התרחישים שלי', compareSelectedLabel: 'השווה נבחרים', scLoad: 'טען', scShare: 'שתף',
         scenariosEmpty: 'עדיין לא שמרת תרחישים. לחץ "שמור תרחיש" בדשבורד.',
+        shareBadge: 'תרחיש משותף — לקריאה בלבד', shareOpenAppLabel: 'פתח את הכלי המלא',
+        shareNotFound: 'התרחיש לא נמצא או שאינו משותף עוד.', shareSavingLabel: 'חיסכון מצטבר',
+        compareReportTitle: 'השוואת תרחישים', exportComparePdfLabel: 'ייצא PDF',
+        shareLinkTitle: 'קישור לשיתוף', shareLinkNote: 'כל אחד עם הקישור יוכל לצפות בתרחיש (לקריאה בלבד, ללא התחברות). הקישור הועתק.',
+        shareLinkCopyText: 'העתק', shareLinkCloseText: 'סגור', shareLinkCopied: 'הועתק!',
         backButtonText: 'החלף רשות',
         editSourceButtonText: 'ערוך נתוני מקור',
         downloadPdfButtonText: 'הורד PDF',
@@ -952,8 +997,13 @@
         saveScenarioLabel: 'Save scenario', openScenariosLabel: 'My scenarios',
         saveScenarioTitle: 'Save scenario', scTitleLabel: 'Title', scDescLabel: 'Description (what this scenario does)',
         scSaveCancelText: 'Cancel', scSaveConfirmText: 'Save', scTitleRequired: 'Please enter a title',
-        scenariosPanelTitle: 'My scenarios', compareSelectedLabel: 'Compare selected', scLoad: 'Load',
+        scenariosPanelTitle: 'My scenarios', compareSelectedLabel: 'Compare selected', scLoad: 'Load', scShare: 'Share',
         scenariosEmpty: 'No saved scenarios yet. Click "Save scenario" in the dashboard.',
+        shareBadge: 'Shared scenario — read-only', shareOpenAppLabel: 'Open the full tool',
+        shareNotFound: 'Scenario not found or no longer shared.', shareSavingLabel: 'Cumulative saving',
+        compareReportTitle: 'Scenario comparison', exportComparePdfLabel: 'Export PDF',
+        shareLinkTitle: 'Share link', shareLinkNote: 'Anyone with the link can view this scenario (read-only, no login). The link was copied.',
+        shareLinkCopyText: 'Copy', shareLinkCloseText: 'Close', shareLinkCopied: 'Copied!',
         backButtonText: 'Change Municipality',
         editSourceButtonText: 'Edit Source Data',
         downloadPdfButtonText: 'Download PDF',
@@ -1066,6 +1116,10 @@
       setText('scSaveCancelText', s.scSaveCancelText); setText('scSaveConfirmText', s.scSaveConfirmText);
       setText('scenariosPanelTitle', s.scenariosPanelTitle); setText('compareSelectedLabel', s.compareSelectedLabel);
       setText('scenariosEmpty', s.scenariosEmpty);
+      setText('exportComparePdfLabel', s.exportComparePdfLabel);
+      setText('shareBadge', s.shareBadge); setText('shareOpenAppLabel', s.shareOpenAppLabel);
+      setText('shareLinkTitle', s.shareLinkTitle); setText('shareLinkNote', s.shareLinkNote);
+      setText('shareLinkCopyText', s.shareLinkCopyText); setText('shareLinkCloseText', s.shareLinkCloseText);
       { const e=document.getElementById('authEmail'); if(e) e.placeholder=s.authEmailPh; }
       { const p=document.getElementById('authPassword'); if(p) p.placeholder=s.authPasswordPh; }
       if(typeof setAuthMode==='function') setAuthMode(authMode);
@@ -2484,6 +2538,7 @@
     async function handleLogout(){ await sb.auth.signOut(); }
 
     function applyAuthState(session){
+      if(shareMode) return; // viewing a public shared scenario — no auth gate
       currentUser = (session && session.user) ? session.user : null;
       const authScreen = document.getElementById('authScreen');
       const userMenu = document.getElementById('userMenu');
@@ -2611,7 +2666,7 @@
     let scenarioCache = []; // last-loaded list of the user's scenarios
     async function loadScenarios(){
       if(!currentUser) return [];
-      const { data, error } = await sb.from('scenarios').select('id, title, description, municipality, summary, created_at').order('created_at', { ascending: false });
+      const { data, error } = await sb.from('scenarios').select('id, title, description, municipality, summary, created_at, is_public, share_token').order('created_at', { ascending: false });
       if(error){ console.warn('scenarios load:', error.message); return []; }
       scenarioCache = data || [];
       return scenarioCache;
@@ -2691,12 +2746,14 @@
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
             <button data-sc-load="${sc.id}" class="px-2.5 py-1 bg-green-50 hover:bg-green-100 text-green-700 rounded-md text-xs font-medium transition-all">${s.scLoad}</button>
+            <button data-sc-share="${sc.id}" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md text-xs font-medium transition-all"><i class="fas fa-share-nodes text-[10px] ml-1"></i>${s.scShare}</button>
             <button data-sc-del="${sc.id}" class="px-2 py-1 text-gray-300 hover:text-red-500 transition-all"><i class="fas fa-trash text-xs"></i></button>
           </div>
         </div>`;
       }).join('');
       list.querySelectorAll('[data-sc-load]').forEach(b=>b.addEventListener('click', async ()=>{ await loadScenarioById(b.getAttribute('data-sc-load')); closeScenariosModal(); }));
       list.querySelectorAll('[data-sc-del]').forEach(b=>b.addEventListener('click', async ()=>{ await deleteScenario(b.getAttribute('data-sc-del')); await loadScenarios(); updateScenarioCount(); selectedScenarioIds = selectedScenarioIds.filter(id=>scenarioCache.some(x=>x.id===id)); renderScenariosList(); }));
+      list.querySelectorAll('[data-sc-share]').forEach(b=>b.addEventListener('click', ()=>shareScenario(b.getAttribute('data-sc-share'))));
       list.querySelectorAll('[data-sc-check]').forEach(c=>c.addEventListener('change', ()=>{
         const id = c.getAttribute('data-sc-check');
         if(c.checked){ if(!selectedScenarioIds.includes(id)) selectedScenarioIds.push(id); }
@@ -2733,14 +2790,14 @@
         const data = sq.map((v,t)=> v - im[t]);
         return { label: sc.title, data, borderColor: COMPARE_COLORS[i%COMPARE_COLORS.length], backgroundColor:'transparent', fill:false, tension:0.25, pointRadius:0, borderWidth:2 };
       });
+      document.getElementById('compareResult').classList.remove('hidden'); // reveal first so the canvas has layout (needed for PDF image)
       const ctx = document.getElementById('compareChart').getContext('2d');
       if(compareChartObj) compareChartObj.destroy();
       compareChartObj = new Chart(ctx, { type:'line', data:{labels, datasets}, options:{
-        responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+        responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
         plugins:{ legend:{labels:{boxWidth:12,font:{size:11}}}, tooltip:{callbacks:{ title:(it)=> it.length? s.chartTooltipTitle(parseInt(it[0].label,10)||(it[0].dataIndex+1)) : '', label:(c)=> c.dataset.label+': ₪'+formatNumber(c.parsed.y) }} },
         scales:{ x:{title:{display:true,text:s.chartXAxis,font:{size:11}},grid:{display:false}}, y:{ticks:{callback:v=>'₪'+(v>=1000?(v/1000).toFixed(0)+'K':v)},grid:{color:'#f1f5f9'}} }
       }});
-      document.getElementById('compareResult').classList.remove('hidden');
       document.getElementById('compareResult').scrollIntoView({block:'nearest'});
     }
 
@@ -2751,13 +2808,105 @@
     document.getElementById('scenariosClose').addEventListener('click', closeScenariosModal);
     document.getElementById('compareSelectedBtn').addEventListener('click', renderCompare);
 
+    // ===== Sharing (public read-only link) =====
+    let shareMode = false;
+    let shareChartObj = null;
+
+    async function shareScenario(id){
+      const sc = scenarioCache.find(x=>x.id===id);
+      let token = sc && sc.share_token;
+      if(!token){
+        token = (crypto.randomUUID ? crypto.randomUUID() : (Date.now()+'-'+Math.random().toString(16).slice(2)));
+        const { error } = await sb.from('scenarios').update({ is_public: true, share_token: token }).eq('id', id);
+        if(error){ console.warn('share:', error.message); return; }
+        if(sc){ sc.share_token = token; sc.is_public = true; }
+      }
+      const link = location.origin + location.pathname + '?share=' + token;
+      try { await navigator.clipboard.writeText(link); } catch(e){}
+      document.getElementById('shareLinkInput').value = link;
+      document.getElementById('shareLinkModal').classList.remove('hidden');
+    }
+
+    function renderSharedKpis(summary){
+      const s = strings[currentLang];
+      const card = (label, val, color)=>`<div class="px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100"><div class="text-[11px] font-medium text-gray-500 mb-0.5">${label}</div><div class="text-base font-bold ${color}">${val}</div></div>`;
+      document.getElementById('shareKpis').innerHTML =
+        card(s.kpiCumulativeLabel, '₪'+formatNumber(summary.netSaving), 'text-green-600') +
+        card(s.kpiAnnualLabel, '₪'+formatNumber(summary.avgAnnual), 'text-gray-800') +
+        card(s.kpiPaybackLabel, summary.payback==null? s.paybackNever : s.paybackYearUnit(summary.payback), 'text-blue-600') +
+        card(s.kpiRoiLabel, summary.roi==null?'—':Math.round(summary.roi)+'%', 'text-amber-600');
+    }
+    function renderSharedChart(summary){
+      const s = strings[currentLang];
+      const data = summary.statusQuoCum.map((v,t)=> v - summary.improvedCum[t]);
+      const ctx = document.getElementById('shareChart').getContext('2d');
+      if(shareChartObj) shareChartObj.destroy();
+      shareChartObj = new Chart(ctx, { type:'line', data:{ labels: summary.years, datasets:[{ label: s.shareSavingLabel, data, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,0.14)', fill:true, tension:0.25, pointRadius:0, borderWidth:2 }] }, options:{
+        responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+        plugins:{ legend:{display:false}, tooltip:{callbacks:{ title:(it)=> it.length? s.chartTooltipTitle(parseInt(it[0].label,10)||(it[0].dataIndex+1)) : '', label:(c)=> s.shareSavingLabel+': ₪'+formatNumber(c.parsed.y) }} },
+        scales:{ x:{title:{display:true,text:s.chartXAxis,font:{size:11}},grid:{display:false}}, y:{ticks:{callback:v=>'₪'+(v>=1000?(v/1000).toFixed(0)+'K':v)},grid:{color:'#f1f5f9'}} }
+      }});
+    }
+    async function openSharedScenario(token){
+      shareMode = true;
+      const view = document.getElementById('shareView');
+      view.classList.remove('hidden');
+      document.getElementById('authScreen').classList.add('hidden'); // no auth gate in public share mode
+      document.getElementById('shareOpenApp').href = location.origin + location.pathname;
+      const s = strings[currentLang];
+      const { data, error } = await sb.from('scenarios').select('title, description, municipality, summary').eq('share_token', token).eq('is_public', true).maybeSingle();
+      if(error || !data || !data.summary){
+        ['shareScTitle','shareScDesc','shareScMuni','shareKpis'].forEach(id=>document.getElementById(id).textContent='');
+        document.getElementById('shareKpis').innerHTML='';
+        const nf = document.getElementById('shareNotFound'); nf.textContent = s.shareNotFound; nf.classList.remove('hidden');
+        return;
+      }
+      document.getElementById('shareScTitle').textContent = data.title || '';
+      document.getElementById('shareScDesc').textContent = data.description || '';
+      const opt = data.municipality ? [...municipalitySelect.options].find(o=>o.value===data.municipality) : null;
+      document.getElementById('shareScMuni').textContent = opt ? opt.text : (data.municipality || '');
+      renderSharedKpis(data.summary);
+      renderSharedChart(data.summary);
+    }
+
+    // ===== Comparison PDF export =====
+    function exportComparePDF(){
+      const s = strings[currentLang];
+      const sel = selectedScenarioIds.map(id=>scenarioCache.find(x=>x.id===id)).filter(Boolean);
+      if(sel.length < 2) return;
+      const tableHtml = document.getElementById('compareTable').outerHTML;
+      // Render the comparison chart onto a fixed-size offscreen canvas (reliable bitmap for the PDF image)
+      let chartImg = '';
+      try {
+        const off = document.createElement('canvas'); off.width = 680; off.height = 300;
+        const maxLen = Math.max(...sel.map(sc=>sc.summary.years.length));
+        const labels = Array.from({length:maxLen}, (_,i)=>i+1);
+        const datasets = sel.map((sc,i)=>{ const sq=sc.summary.statusQuoCum, im=sc.summary.improvedCum; return { label:sc.title, data:sq.map((v,t)=>v-im[t]), borderColor:COMPARE_COLORS[i%COMPARE_COLORS.length], backgroundColor:'transparent', fill:false, tension:0.25, pointRadius:0, borderWidth:2 }; });
+        const tmp = new Chart(off.getContext('2d'), { type:'line', data:{labels,datasets}, options:{ responsive:false, animation:false, plugins:{legend:{labels:{boxWidth:12,font:{size:11}}}}, scales:{ x:{title:{display:true,text:s.chartXAxis}}, y:{ticks:{callback:v=>'₪'+(v>=1000?(v/1000).toFixed(0)+'K':v)}} } } });
+        chartImg = '<img src="'+off.toDataURL('image/png')+'" style="width:100%;max-width:680px;margin-top:16px;">';
+        tmp.destroy();
+      } catch(e){ console.warn('compare pdf chart:', e.message); }
+      const today = new Date().toLocaleDateString(currentLang==='he'?'he-IL':'en-GB',{year:'numeric',month:'long',day:'numeric'});
+      document.getElementById('printContent').innerHTML =
+        '<h1 style="font-size:20px;font-weight:bold;margin:0 0 4px;">'+s.compareReportTitle+'</h1>' +
+        '<p style="font-size:12px;color:#6b7280;margin:0 0 16px;">'+today+'</p>' +
+        '<div style="font-size:12px;">'+tableHtml+'</div>' + chartImg;
+      window.print();
+    }
+
     document.getElementById('authTabSignin').addEventListener('click', ()=>setAuthMode('signin'));
     document.getElementById('authTabSignup').addEventListener('click', ()=>setAuthMode('signup'));
     document.getElementById('authSubmit').addEventListener('click', handleAuthSubmit);
     document.getElementById('authPassword').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') handleAuthSubmit(); });
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    document.getElementById('exportComparePdfBtn').addEventListener('click', exportComparePDF);
+    document.getElementById('shareLinkClose').addEventListener('click', ()=>document.getElementById('shareLinkModal').classList.add('hidden'));
+    document.getElementById('shareLinkCopy').addEventListener('click', async ()=>{ const v=document.getElementById('shareLinkInput').value; try{ await navigator.clipboard.writeText(v);}catch(e){} const b=document.getElementById('shareLinkCopyText'); const o=b.textContent; b.textContent=strings[currentLang].shareLinkCopied; setTimeout(()=>{b.textContent=o;},1500); });
+
+    const _shareToken = new URLSearchParams(location.search).get('share');
+    if(_shareToken){ shareMode = true; openSharedScenario(_shareToken); }
     sb.auth.onAuthStateChange((_event, session)=>applyAuthState(session));
-    sb.auth.getSession().then(({ data })=>applyAuthState(data.session));
+    if(!_shareToken){ sb.auth.getSession().then(({ data })=>applyAuthState(data.session)); }
     setAuthMode('signin');
   </script>
 </body>
