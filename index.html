@@ -605,6 +605,35 @@
     </div>
   </div>
 
+  <!-- Reset Modal -->
+  <div id="resetModal" class="hidden fixed inset-0 z-[56] flex items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full">
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+        <i class="fas fa-rotate-left text-slate-500 text-sm"></i>
+        <h3 id="resetModalTitle" class="text-sm font-semibold text-gray-700">איפוס להגדרות יצרן</h3>
+      </div>
+      <div class="px-5 py-4 space-y-3">
+        <p id="resetModalDesc" class="text-xs text-gray-400">בחר/י מה לאפס. התרחישים השמורים לא יימחקו.</p>
+        <label class="flex items-start gap-2.5 cursor-pointer">
+          <input type="checkbox" id="resetOptModel" checked class="mt-0.5 accent-green-600">
+          <span><span id="resetOptModelLabel" class="text-sm text-gray-700">מודל הכדאיות</span><span id="resetOptModelHint" class="block text-[11px] text-gray-400">עלויות, היטל, תפעול, כניסה, אופק, צמיחה, בחירת זרם ועלות נקודתית</span></span>
+        </label>
+        <label class="flex items-start gap-2.5 cursor-pointer">
+          <input type="checkbox" id="resetOptSim" checked class="mt-0.5 accent-green-600">
+          <span><span id="resetOptSimLabel" class="text-sm text-gray-700">סימולציה</span><span id="resetOptSimHint" class="block text-[11px] text-gray-400">פחים ותוספות שהזנת</span></span>
+        </label>
+        <label class="flex items-start gap-2.5 cursor-pointer">
+          <input type="checkbox" id="resetOptSource" class="mt-0.5 accent-red-600">
+          <span><span id="resetOptSourceLabel" class="text-sm text-gray-700">נתוני מקור</span><span id="resetOptSourceHint" class="block text-[11px] text-red-400">מחזיר לנתוני 2023 הרשמיים ומוחק את עריכות הנתונים האישיות שלך לרשות זו</span></span>
+        </label>
+      </div>
+      <div class="flex justify-end gap-3 px-5 py-4 border-t border-gray-100">
+        <button id="resetCancel" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-sm font-medium transition-all"><span id="resetCancelText">ביטול</span></button>
+        <button id="resetConfirm" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all"><span id="resetConfirmText">אפס</span></button>
+      </div>
+    </div>
+  </div>
+
   <!-- Dashboard Info Modal -->
   <div id="infoModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
     <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-y-auto">
@@ -894,6 +923,11 @@
         compareReportTitle: 'השוואת תרחישים', exportComparePdfLabel: 'ייצא PDF',
         shareLinkTitle: 'קישור לשיתוף', shareLinkNote: 'כל אחד עם הקישור יוכל לצפות בתרחיש (לקריאה בלבד, ללא התחברות). הקישור הועתק.',
         shareLinkCopyText: 'העתק', shareLinkCloseText: 'סגור', shareLinkCopied: 'הועתק!',
+        resetModalTitle: 'איפוס להגדרות יצרן', resetModalDesc: 'בחר/י מה לאפס. התרחישים השמורים לא יימחקו.',
+        resetOptModelLabel: 'מודל הכדאיות', resetOptModelHint: 'עלויות, היטל, תפעול, כניסה, אופק, צמיחה, בחירת זרם ועלות נקודתית',
+        resetOptSimLabel: 'סימולציה', resetOptSimHint: 'פחים ותוספות שהזנת',
+        resetOptSourceLabel: 'נתוני מקור', resetOptSourceHint: 'מחזיר לנתוני 2023 הרשמיים ומוחק את עריכות הנתונים האישיות שלך לרשות זו',
+        resetCancelText: 'ביטול', resetConfirmText: 'אפס',
         backButtonText: 'החלף רשות',
         editSourceButtonText: 'ערוך נתוני מקור',
         downloadPdfButtonText: 'הורד PDF',
@@ -1004,6 +1038,11 @@
         compareReportTitle: 'Scenario comparison', exportComparePdfLabel: 'Export PDF',
         shareLinkTitle: 'Share link', shareLinkNote: 'Anyone with the link can view this scenario (read-only, no login). The link was copied.',
         shareLinkCopyText: 'Copy', shareLinkCloseText: 'Close', shareLinkCopied: 'Copied!',
+        resetModalTitle: 'Reset to factory settings', resetModalDesc: 'Choose what to reset. Saved scenarios are never deleted.',
+        resetOptModelLabel: 'Viability model', resetOptModelHint: 'Costs, levy, operations, site-entry, horizon, growth, stream selection and point cost',
+        resetOptSimLabel: 'Simulation', resetOptSimHint: 'Bins and the additions you entered',
+        resetOptSourceLabel: 'Source data', resetOptSourceHint: 'Reverts to the official 2023 data and deletes your personal edits for this municipality',
+        resetCancelText: 'Cancel', resetConfirmText: 'Reset',
         backButtonText: 'Change Municipality',
         editSourceButtonText: 'Edit Source Data',
         downloadPdfButtonText: 'Download PDF',
@@ -1120,6 +1159,11 @@
       setText('shareBadge', s.shareBadge); setText('shareOpenAppLabel', s.shareOpenAppLabel);
       setText('shareLinkTitle', s.shareLinkTitle); setText('shareLinkNote', s.shareLinkNote);
       setText('shareLinkCopyText', s.shareLinkCopyText); setText('shareLinkCloseText', s.shareLinkCloseText);
+      setText('resetModalTitle', s.resetModalTitle); setText('resetModalDesc', s.resetModalDesc);
+      setText('resetOptModelLabel', s.resetOptModelLabel); setText('resetOptModelHint', s.resetOptModelHint);
+      setText('resetOptSimLabel', s.resetOptSimLabel); setText('resetOptSimHint', s.resetOptSimHint);
+      setText('resetOptSourceLabel', s.resetOptSourceLabel); setText('resetOptSourceHint', s.resetOptSourceHint);
+      setText('resetCancelText', s.resetCancelText); setText('resetConfirmText', s.resetConfirmText);
       { const e=document.getElementById('authEmail'); if(e) e.placeholder=s.authEmailPh; }
       { const p=document.getElementById('authPassword'); if(p) p.placeholder=s.authPasswordPh; }
       if(typeof setAuthMode==='function') setAuthMode(authMode);
@@ -1281,7 +1325,9 @@
       setLanguage(currentLang === 'he' ? 'en' : 'he');
     });
     costPerTonInput.addEventListener('input', updateCostCalculations);
-    resetButton.addEventListener('click', resetSimulation);
+    resetButton.addEventListener('click', openResetModal);
+    document.getElementById('resetCancel').addEventListener('click', closeResetModal);
+    document.getElementById('resetConfirm').addEventListener('click', confirmReset);
     closeAlert.addEventListener('click', hideAlert);
 
     startButton.addEventListener('click', () => {
@@ -2499,6 +2545,57 @@
       binsConfig.forEach(cfg=>{ updateBinCountDisplay(cfg.id); updateBinPotentialCell(cfg.id); });
 
       setButtonsAvailability(); updateSummary();
+    }
+
+    // Re-render the simulation UI from the current in-memory sim state (without resetting it)
+    function renderSimUI(){
+      const cur = currentMunicipality; if(!cur) return;
+      const data = municipalities[cur];
+      document.querySelectorAll('.simulated-value').forEach(el=>{
+        const type = el.getAttribute('data-type');
+        const base = data.nonRecyclables[type];
+        el.textContent = (type==='General Household Landfill'?landfillSimulated:base).toFixed(2);
+      });
+      Object.keys(data.recyclables).forEach(writeFinalIntoInput);
+      binsConfig.forEach(cfg=>{ updateBinCountDisplay(cfg.id); updateBinPotentialCell(cfg.id); });
+    }
+
+    // ===== Reset to factory settings (category-based; saved scenarios are never touched) =====
+    function openResetModal(){
+      if(!currentMunicipality) return;
+      document.getElementById('resetOptModel').checked = true;
+      document.getElementById('resetOptSim').checked = true;
+      document.getElementById('resetOptSource').checked = false; // destructive — off by default each time
+      document.getElementById('resetModal').classList.remove('hidden');
+    }
+    function closeResetModal(){ document.getElementById('resetModal').classList.add('hidden'); }
+    async function confirmReset(){
+      const cur = currentMunicipality; if(!cur) return;
+      const model  = document.getElementById('resetOptModel').checked;
+      const sim    = document.getElementById('resetOptSim').checked;
+      const source = document.getElementById('resetOptSource').checked;
+      closeResetModal();
+      if(!model && !sim && !source) return;
+
+      if(source){
+        // Snapshot the categories the user chose to KEEP (the data reload re-inits model + sim)
+        const keepModel = !model ? JSON.parse(JSON.stringify(economicState)) : null;
+        const keepStreams = !model ? { selectedStream, streamEditMode, streamRecovery:{...streamRecovery}, pointOpCost:{...pointOpCost} } : null;
+        const keepSim = !sim ? { manualSimulated:{...manualSimulated}, binsState:{...binsState}, landfillSimulated } : null;
+        // Revert this municipality's data to the official baseline + delete the personal override
+        delete userOverrides[cur];
+        if(currentUser){ const { error } = await sb.from('data_overrides').delete().eq('municipality', cur); if(error) console.warn('reset source:', error.message); }
+        applyUserOverride(cur);
+        restoringScenario = true;
+        try { loadMunicipalityData(); } finally { restoringScenario = false; }
+        // Restore whatever the user did NOT ask to reset
+        if(keepModel){ economicState = keepModel; if(keepStreams){ selectedStream=keepStreams.selectedStream; streamEditMode=keepStreams.streamEditMode; streamRecovery=keepStreams.streamRecovery; pointOpCost=keepStreams.pointOpCost; } writeEconomicInputs(); }
+        if(keepSim){ manualSimulated=keepSim.manualSimulated; binsState=keepSim.binsState; landfillSimulated=keepSim.landfillSimulated; renderSimUI(); }
+      } else {
+        if(model){ initDashboardInputs(); }
+        if(sim){ resetSimulation(); }
+      }
+      updateStreamControls(); renderPointOpCosts(); buildStreamDashboard(); refreshModel(); setButtonsAvailability(); updateSummary();
     }
 
     // ===== Auth =====
