@@ -374,6 +374,19 @@
           </div>
         </div>
       </div>
+      <div class="px-5 py-3 border-b border-gray-100 bg-orange-50/40 flex items-center gap-3 flex-wrap">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-lg bg-orange-100 flex items-center justify-center"><i class="fas fa-dumpster text-orange-500 text-[10px]"></i></div>
+          <div>
+            <div id="nonRecycledCubeLabel" class="text-xs font-medium text-gray-600">פסולת לא ממוחזרת — אשפה ביתית להטמנה</div>
+            <div id="nonRecycledCubeHint" class="text-[11px] text-gray-400">הבסיס שממנו נגזרים זרמי הפסולת</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5 ms-auto">
+          <input id="dashNonRecycledInput" type="number" min="0" step="1" class="w-32 px-3 py-1.5 border border-gray-200 rounded-lg text-sm tabular-nums bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+          <span id="nonRecycledCubeUnit" class="text-[11px] text-gray-400">טון</span>
+        </div>
+      </div>
       <div class="overflow-x-auto">
         <table class="min-w-full">
           <thead>
@@ -969,6 +982,7 @@
         costDisplay: (c) => c > 0 ? `עלות הטמנה: ₪${formatNumber(c)} לטון` : 'לא הוזנה עלות הטמנה',
         viewSim: 'סימולציה', viewDash: 'דשבורד',
         streamsTitle: 'ניהול זרמי פסולת — היכן ההזדמנות', streamsBadge: 'הערכה',
+        nonRecycledCubeLabel: 'פסולת לא ממוחזרת — אשפה ביתית להטמנה', nonRecycledCubeHint: 'הבסיס שממנו נגזרים זרמי הפסולת', nonRecycledCubeUnit: 'טון',
         streamsHint: '* פירוק זרם ההטמנה הביתי לפי אומדן הרכב פסולת תקני; לחצ/י על זרם כדי להזין אותו כיעד ההסטה במודל.',
         thStream: 'זרם', thStreamLandfill: 'בהטמנה (טון)', thStreamDivertable: 'ניתן להסיט (טון)', thStreamOpportunity: 'הזדמנות ₪/שנה',
         economicTitle: 'מודל כדאיות כלכלית רב-שנתי',
@@ -1084,6 +1098,7 @@
         costDisplay: (c) => c > 0 ? `Landfill cost: ₪${formatNumber(c)} / ton` : 'No landfill cost entered',
         viewSim: 'Simulation', viewDash: 'Dashboard',
         streamsTitle: 'Waste Stream Management — Where the Opportunity Is', streamsBadge: 'Estimate',
+        nonRecycledCubeLabel: 'Non-recycled waste — household landfill', nonRecycledCubeHint: 'The basis the waste streams are derived from', nonRecycledCubeUnit: 'tons',
         streamsHint: '* The household-landfill stream is broken down by a standard waste-composition estimate; click a stream to load it as the diversion target in the model.',
         thStream: 'Stream', thStreamLandfill: 'In Landfill (tons)', thStreamDivertable: 'Divertable (tons)', thStreamOpportunity: 'Opportunity ₪/yr',
         economicTitle: 'Multi-Year Economic Viability Model',
@@ -1209,6 +1224,7 @@
       // Dashboard
       setText('viewSimBtn', s.viewSim); setText('viewDashBtn', s.viewDash);
       setText('streamsTitle', s.streamsTitle); setText('streamsBadge', s.streamsBadge);
+      setText('nonRecycledCubeLabel', s.nonRecycledCubeLabel); setText('nonRecycledCubeHint', s.nonRecycledCubeHint); setText('nonRecycledCubeUnit', s.nonRecycledCubeUnit);
       setText('streamsHint', s.streamsHint);
       setText('thStream', s.thStream); setText('thStreamLandfill', s.thStreamLandfill);
       setText('thStreamDivertable', s.thStreamDivertable); setText('thStreamOpportunity', s.thStreamOpportunity);
@@ -1961,6 +1977,8 @@
       const tbody = document.getElementById('streamsTable');
       if(!tbody) return;
       const s = strings[currentLang];
+      const nrInput = document.getElementById('dashNonRecycledInput');
+      if(nrInput && document.activeElement !== nrInput) nrInput.value = Math.round(householdLandfillTons());
       const rows = computeStreams();
       tbody.innerHTML = '';
       rows.forEach(r=>{
@@ -2075,16 +2093,22 @@
       return { years, statusQuoCum, improvedCum, simImprovedCum, totalSaving, netSaving, avgAnnual, roi, payback, target, simTarget, simTotalSaving, simNetSaving, simAvgAnnual, simRoi, simPayback };
     }
 
+    function setRoiVal(id, roi){
+      const el = document.getElementById(id);
+      el.textContent = (roi == null) ? '—' : Math.round(roi) + '%';
+      el.classList.remove('text-amber-600','text-green-600','text-red-500','text-gray-400');
+      el.classList.add(roi == null ? 'text-gray-400' : (roi >= 0 ? 'text-green-600' : 'text-red-500'));
+    }
     function updateDashboardKPIs(m){
       const s = strings[currentLang];
       document.getElementById('kpiAnnualVal').textContent = '₪' + formatNumber(m.avgAnnual);
       document.getElementById('kpiCumulativeVal').textContent = '₪' + formatNumber(m.netSaving);
       document.getElementById('kpiPaybackVal').textContent = (m.payback == null) ? s.paybackNever : s.paybackYearUnit(m.payback);
-      document.getElementById('kpiRoiVal').textContent = (m.roi == null) ? '—' : Math.round(m.roi) + '%';
+      setRoiVal('kpiRoiVal', m.roi);
       document.getElementById('kpiSimVal').textContent = '₪' + formatNumber(m.simNetSaving);
       document.getElementById('kpiSimAnnualVal').textContent = '₪' + formatNumber(m.simAvgAnnual);
       document.getElementById('kpiSimPaybackVal').textContent = (m.simPayback == null) ? s.paybackNever : s.paybackYearUnit(m.simPayback);
-      document.getElementById('kpiSimRoiVal').textContent = (m.simRoi == null) ? '—' : Math.round(m.simRoi) + '%';
+      setRoiVal('kpiSimRoiVal', m.simRoi);
     }
 
     function renderMultiYearChart(m){
@@ -2241,6 +2265,20 @@
     document.getElementById('streamAllBtn').addEventListener('click', ()=>{ selectedStream = null; updateStreamControls(); buildStreamDashboard(); refreshModel(); });
     document.getElementById('streamUnitPct').addEventListener('click', ()=>{ streamEditMode = 'percent'; updateStreamControls(); buildStreamDashboard(); });
     document.getElementById('streamUnitTon').addEventListener('click', ()=>{ streamEditMode = 'tons'; updateStreamControls(); buildStreamDashboard(); });
+
+    // Editable non-recycled (household landfill) — the basis the waste streams derive from
+    function applyDashNonRecycled(val){
+      const cur = currentMunicipality; if(!cur) return;
+      val = Math.max(0, parseFloat(val) || 0);
+      const nr = municipalities[cur].nonRecyclables;
+      nr["General Household Landfill"] = val;
+      municipalities[cur].totalWaste = Object.values(municipalities[cur].recyclables).reduce((s,v)=>s+v,0) + Object.values(nr).reduce((s,v)=>s+v,0);
+      landfillSimulated = val; // base changed → realign the simulated landfill to the new base
+      saveUserOverride(cur);   // persist as a personal source-data edit
+      renderSimUI(); updateSummary();
+      buildStreamDashboard(); refreshModel();
+    }
+    document.getElementById('dashNonRecycledInput').addEventListener('input', (e)=>applyDashNonRecycled(e.target.value));
 
     // Info modal
     function openInfoModal(titleKey, bodyKey){
