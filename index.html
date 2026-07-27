@@ -2229,9 +2229,15 @@
           economicState.overallCost = r2(overallField);
         }
       } else {
-        // a component changed → raise the overall only if the components now exceed it
-        const prev = (economicState.overallCost != null) ? economicState.overallCost : overallField;
-        economicState.overallCost = r2(Math.max(prev, specified));
+        // a component changed. Compare the new components' sum to the previous one:
+        //  - raised  → raise the overall only if the sum now exceeds it (otherwise the unspecified slack shrinks)
+        //  - lowered → drop the overall by the same amount (the unspecified residual stays constant)
+        const oldSpecified = r2((economicState.baseLevyPerTon||0) + (economicState.operationsCostPerTon||0) + (economicState.siteEntryCostPerTon||0));
+        const prevOverall = (economicState.overallCost != null) ? economicState.overallCost : Math.max(overallField, oldSpecified);
+        const delta = r2(specified - oldSpecified);
+        economicState.overallCost = (delta > 0)
+          ? r2(Math.max(prevOverall, specified))          // raising
+          : r2(Math.max(specified, prevOverall + delta)); // lowering (delta <= 0)
       }
       if(economicState.overallCost == null) economicState.overallCost = specified;
 
