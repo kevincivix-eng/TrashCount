@@ -421,8 +421,9 @@
         <!-- inputs -->
         <div class="space-y-3">
           <div>
-            <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpOverallCostLabel">עלות כללית ₪/טון</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpOverallCostTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">מחיר השער המלא לטון בהטמנה — סך ההיטל + התפעול. זהו הערך שהוזן במסך הראשון, וניתן לעדכן אותו גם כאן. עריכתו מאזנת את עלות התפעול (ההיטל נשאר).</span></span></label>
+            <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpOverallCostLabel">עלות כללית ₪/טון</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpOverallCostTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">מחיר השער המלא לטון בהטמנה. עצמאי מהמרכיבים — עריכתו לא משנה אותם. הוא לא יכול להיות נמוך מסכום המרכיבים; ההפרש מוצג כ"עלות לא מפורטת".</span></span></label>
             <input id="inpOverallCost" type="number" min="0" step="1" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+            <p id="overallCostMsg" class="hidden mt-1 text-[11px] text-red-500 leading-snug"></p>
           </div>
           <div>
             <label class="flex items-center gap-1 text-xs font-medium text-gray-400 mb-1"><span id="inpBaseLevyLabel">היטל הטמנה ₪/טון</span><span class="relative group inline-flex items-center"><i class="fas fa-circle-info text-[10px] text-gray-300 hover:text-blue-500 cursor-help"></i><span id="inpBaseLevyTip" class="hidden group-hover:block absolute z-50 top-full mt-1 start-0 w-56 p-2 rounded-lg bg-gray-800 text-white text-[11px] leading-snug font-normal shadow-lg">רכיב המס הממשלתי מתוך מחיר השער. רק הוא מטפס לפי "עליית היטל". עריכתו מעדכנת את העלות הכללית (כללית = היטל + תפעול).</span></span></label>
@@ -893,7 +894,7 @@
     // Multi-year economic model defaults (all editable in UI)
     const economicDefaults = {
       horizonYears: 10, baseLevyPerTon: 0, levyAnnualRise: 0.05,
-      operationsCostPerTon: null, operationsAnnualRise: 0, siteEntryCostPerTon: 0,
+      operationsCostPerTon: 0, operationsAnnualRise: 0, siteEntryCostPerTon: 0, overallCost: null,
       rampUpYears: 3, investment: 0, treatmentCostPerTon: 0, populationGrowth: 0.02, divertedTonsTarget: null
     };
     let economicState = { ...economicDefaults };
@@ -992,7 +993,9 @@
         inpSiteEntryLabel: 'עלות כניסה לאתר ₪/טון', inpSiteEntryTip: 'עלות הכניסה/שקילה באתר ההטמנה, לטון. רכיב נוסף במחיר השער — עריכתו מתווספת לעלות הכללית (כללית = היטל + תפעול + כניסה לאתר).',
         pointOpLabel: 'עלות תפעול פסולת נקודתית ₪/טון', pointOpTip: 'עלות תפעול ייעודית לכל זרם פסולת, מתווספת לעלות המיחזור לטון מוסט. כשבחרת זרם בודד למעלה — רק השורה שלו משפיעה; ב"כל הזרמים" נלקח ממוצע משוקלל לפי הטונות.',
         inpHorizonTip: 'מספר השנים שהמודל מחשב קדימה. אופק ארוך יותר ⇐ חיסכון מצטבר גדול יותר, כי ההיטל ממשיך לטפס.',
-        inpOverallCostTip: 'מחיר השער המלא לטון בהטמנה — סך ההיטל + התפעול. זהו הערך שהוזן במסך הראשון, וניתן לעדכן אותו גם כאן. עריכתו מאזנת את עלות התפעול (ההיטל נשאר).',
+        inpOverallCostTip: 'מחיר השער המלא לטון בהטמנה. עצמאי מהמרכיבים — עריכתו לא משנה אותם. הוא לא יכול להיות נמוך מסכום המרכיבים; ההפרש מוצג כ"עלות לא מפורטת".',
+        unspecifiedCost: (x)=> 'עלות לא מפורטת: ₪' + formatNumber(x),
+        overallTooLow: (x)=> 'העלות הכללית לא יכולה להיות נמוכה מסכום המרכיבים (₪' + formatNumber(x) + ').',
         inpBaseLevyTip: 'רכיב המס הממשלתי מתוך מחיר השער. רק הוא מטפס לפי "עליית היטל". עריכתו מעדכנת את העלות הכללית (כללית = היטל + תפעול).',
         inpLevyRiseTip: 'קצב הטיפוס השנתי של ההיטל. היטל בשנה t = היטל בסיס × (1+אחוז)^t. מנוע עיקרי של הכדאיות — מייקר את "המשך כרגיל".',
         inpOpsCostTip: 'כל מה שאינו ההיטל במחיר השער: שינוע, תפעול האתר והוצאות נוספות. עריכתו מעדכנת את העלות הכללית (כללית = היטל + תפעול).',
@@ -1108,7 +1111,9 @@
         inpSiteEntryLabel: 'Site entry cost ₪/ton', inpSiteEntryTip: 'The gate/weighing entry fee at the landfill site, per ton. Another component of the gate fee — editing it adds to the overall cost (overall = levy + operations + site entry).',
         pointOpLabel: 'Point waste-operation cost ₪/ton', pointOpTip: 'A dedicated operation cost per waste stream, added to the recycling cost per diverted ton. When a single stream is selected above, only its row applies; for "all streams" a tons-weighted average is used.',
         inpHorizonTip: 'Number of years the model projects forward. A longer horizon ⇒ larger cumulative saving, because the levy keeps climbing.',
-        inpOverallCostTip: 'The full gate fee per landfilled ton — levy + operations. This is the value entered on the first screen and can be updated here too. Editing it re-balances operations (levy stays).',
+        inpOverallCostTip: 'The full gate fee per landfilled ton. Independent of its components — editing it does not change them. It cannot be lower than their sum; any gap shows as "unspecified cost".',
+        unspecifiedCost: (x)=> 'Unspecified cost: ₪' + formatNumber(x),
+        overallTooLow: (x)=> 'Overall cost cannot be lower than the sum of its components (₪' + formatNumber(x) + ').',
         inpBaseLevyTip: 'The government-tax component of the gate fee. Only this part escalates by "Levy rise". Editing it updates the overall cost (overall = levy + operations).',
         inpLevyRiseTip: 'Annual escalation rate of the levy. Levy in year t = base levy × (1+rate)^t. A key driver of viability — it makes "status quo" costlier.',
         inpOpsCostTip: 'Everything in the gate fee other than the levy: transport, site operation and other expenses. Editing it updates the overall cost (overall = levy + operations).',
@@ -1237,6 +1242,7 @@
       setText('inpPopGrowthLabel', s.inpPopGrowthLabel); setText('popGrowthNote', s.popGrowthNote);
       setText('inpOverallCostLabel', s.inpOverallCostLabel); setText('inpOpsCostLabel', s.inpOpsCostLabel);
       setText('inpOpsRiseLabel', s.inpOpsRiseLabel);
+      if(currentMunicipality && document.getElementById('inpOverallCost') && typeof reconcileCostComponents==='function') reconcileCostComponents('overall'); // re-render the unspecified-cost line in the active language
       setText('inpSiteEntryLabel', s.inpSiteEntryLabel); setText('inpSiteEntryTip', s.inpSiteEntryTip);
       setText('pointOpLabel', s.pointOpLabel); setText('pointOpTip', s.pointOpTip);
       renderPointOpCosts();
@@ -2038,14 +2044,13 @@
 
     function computeMultiYear(){
       const H = Math.max(1, economicState.horizonYears|0);
-      const cost = parseFloat(costPerTonInput.value) || 0;
-      // The landfill gate fee (cost) is a blended price split into two components: levy + operations.
-      // Each escalates at its OWN annual rate; the gate fee per year = levy_t + operations_t.
-      const baseLevy = Math.min(economicState.baseLevyPerTon || 0, cost);
-      const siteEntry = Math.max(0, economicState.siteEntryCostPerTon || 0); // site-entry fee — another flat gate component
-      const operations = (economicState.operationsCostPerTon != null)
-        ? Math.max(0, economicState.operationsCostPerTon)
-        : Math.max(0, cost - baseLevy - siteEntry);
+      // The gate fee is an OVERALL cost that stands on its own. It is optionally broken into
+      // components (levy + operations + site-entry); whatever isn't specified is a flat "unspecified" residual.
+      const baseLevy = Math.max(0, economicState.baseLevyPerTon || 0);
+      const siteEntry = Math.max(0, economicState.siteEntryCostPerTon || 0);
+      const operations = Math.max(0, economicState.operationsCostPerTon || 0);
+      const overall = Math.max(economicState.overallCost != null ? economicState.overallCost : (parseFloat(costPerTonInput.value)||0), baseLevy + operations + siteEntry);
+      const residual = Math.max(0, overall - (baseLevy + operations + siteEntry)); // "unspecified cost" — flat over years
       const rise = economicState.levyAnnualRise || 0;
       const opsRise = economicState.operationsAnnualRise || 0;
       const popGrowth = economicState.populationGrowth || 0;
@@ -2066,7 +2071,7 @@
       for(let t=0; t<H; t++){
         const levy = baseLevy * Math.pow(1+rise, t);
         const ops = operations * Math.pow(1+opsRise, t);
-        const gate = levy + ops + siteEntry; // gate fee = rising levy + rising operations + flat site-entry
+        const gate = levy + ops + siteEntry + residual; // rising levy + rising operations + flat site-entry + flat unspecified residual
         const grow = Math.pow(1+popGrowth, t); // population growth scales total waste each year
         const landfillT = landfill * grow;
         const diverted = target * Math.min(1, (t+1)/ramp) * grow; // diverted scales too → recycling share preserved
@@ -2175,6 +2180,7 @@
       set('inpHorizon', economicDefaults.horizonYears);
       set('inpBaseLevy', economicDefaults.baseLevyPerTon);
       set('inpLevyRise', economicDefaults.levyAnnualRise * 100);
+      set('inpOpsCost', economicDefaults.operationsCostPerTon);
       set('inpOpsRise', economicDefaults.operationsAnnualRise * 100);
       set('inpSiteEntry', economicDefaults.siteEntryCostPerTon);
       set('inpRampUp', economicDefaults.rampUpYears);
@@ -2202,32 +2208,54 @@
     }
 
     // Keep the linked cost fields consistent: overall = levy + operations + site-entry.
-    // Editing a component recomputes the overall; editing the overall re-balances operations (levy & site-entry fixed, cascading if needed).
+    // The overall cost is independent of its components. It must never be below their sum.
+    //  - Editing a component that pushes the sum above the overall raises the overall to match.
+    //  - Editing the overall below the sum is rejected (red field + message); the model keeps the last valid value.
+    //  - Any gap (overall > sum of components) is shown as a red "unspecified cost" line.
     function reconcileCostComponents(source){
       const r2 = (x)=> Math.round(x*100)/100;
       const g = (id)=>{ const v=parseFloat(document.getElementById(id).value); return isNaN(v)?0:Math.max(0,v); };
-      let overall = g('inpOverallCost');
-      let levy = g('inpBaseLevy');
-      let ops = g('inpOpsCost');
-      let site = g('inpSiteEntry');
-      if(source === 'costPerTon'){ const v=parseFloat(costPerTonInput.value); overall = isNaN(v)?0:Math.max(0,v); }
+      let levy = g('inpBaseLevy'), ops = g('inpOpsCost'), site = g('inpSiteEntry');
+      let overallField = g('inpOverallCost');
+      if(source === 'costPerTon'){ const v=parseFloat(costPerTonInput.value); overallField = isNaN(v)?0:Math.max(0,v); }
+      const specified = r2(levy + ops + site);
+      let overallError = false;
+
       if(source === 'overall' || source === 'costPerTon'){
-        // overall is the anchor: operations absorbs; if it would go negative, cascade-reduce site-entry then levy
-        let rem = overall - levy - site;
-        if(rem >= 0){ ops = rem; }
-        else { ops = 0; const rem2 = overall - levy; if(rem2 >= 0){ site = rem2; } else { site = 0; levy = overall; } }
-      } else { // 'levy' | 'ops' | 'site' edited → overall recomputes
-        overall = levy + ops + site;
+        if(overallField < specified){
+          // invalid — don't lower the model below the components; flag the field, keep the typed value visible
+          overallError = true;
+        } else {
+          economicState.overallCost = r2(overallField);
+        }
+      } else {
+        // a component changed → raise the overall only if the components now exceed it
+        const prev = (economicState.overallCost != null) ? economicState.overallCost : overallField;
+        economicState.overallCost = r2(Math.max(prev, specified));
       }
-      overall = r2(overall); levy = r2(levy); ops = r2(ops); site = r2(site);
-      document.getElementById('inpOverallCost').value = overall;
-      document.getElementById('inpBaseLevy').value = levy;
-      document.getElementById('inpOpsCost').value = ops;
-      document.getElementById('inpSiteEntry').value = site;
-      costPerTonInput.value = overall; // keep the first-screen field in sync
+      if(economicState.overallCost == null) economicState.overallCost = specified;
+
       economicState.baseLevyPerTon = levy;
       economicState.operationsCostPerTon = ops;
       economicState.siteEntryCostPerTon = site;
+
+      // Reflect the committed overall in the fields (except while showing an invalid typed value)
+      if(!overallError){ document.getElementById('inpOverallCost').value = r2(economicState.overallCost); }
+      costPerTonInput.value = economicState.overallCost;
+
+      // Field styling + message line (error takes precedence over the residual note)
+      const field = document.getElementById('inpOverallCost');
+      const msg = document.getElementById('overallCostMsg');
+      const s = strings[currentLang];
+      const residual = r2((economicState.overallCost || 0) - specified);
+      field.classList.toggle('!border-red-400', overallError);
+      field.classList.toggle('!ring-1', overallError);
+      field.classList.toggle('!ring-red-300', overallError);
+      if(msg){
+        if(overallError){ msg.textContent = s.overallTooLow(specified); msg.classList.remove('hidden'); }
+        else if(residual > 0){ msg.textContent = s.unspecifiedCost(residual); msg.classList.remove('hidden'); }
+        else { msg.textContent = ''; msg.classList.add('hidden'); }
+      }
     }
 
     ['inpHorizon','inpLevyRise','inpOpsRise','inpRampUp','inpInvestment','inpTreatment','inpPopGrowth'].forEach(id=>{
@@ -2741,7 +2769,10 @@
       set('inpBaseLevy', economicState.baseLevyPerTon||0);
       set('inpOpsCost', economicState.operationsCostPerTon||0);
       set('inpSiteEntry', economicState.siteEntryCostPerTon||0);
-      set('inpOverallCost', (economicState.baseLevyPerTon||0)+(economicState.operationsCostPerTon||0)+(economicState.siteEntryCostPerTon||0));
+      const specified = (economicState.baseLevyPerTon||0)+(economicState.operationsCostPerTon||0)+(economicState.siteEntryCostPerTon||0);
+      if(economicState.overallCost == null || economicState.overallCost < specified) economicState.overallCost = specified;
+      set('inpOverallCost', economicState.overallCost);
+      reconcileCostComponents('overall'); // refresh the residual / unspecified-cost line
     }
     function captureScenario(){
       const cur = currentMunicipality;
