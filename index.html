@@ -945,6 +945,7 @@
         simModalNote: 'כל טון שמתווסף למיחזור מופחת מהפסולת המיועדת להטמנה (סכום אפס).',
         simModalCancel: 'ביטול', simModalSave: 'החל',
         binCountLabel: 'מספר פחים:', simByTonsTitle: 'הוסף לפי טון', simByBinsTitle: 'הוסף לפי מספר פחים',
+        pdfBinsUnit: 'פחים', pdfScenarioPrefix: 'תרחיש:',
         binSimModalHeading: 'סימולציית פחים',
         binSimModalPerBinLabel: 'טון פוטנציאלי לפח', binSimModalTon: 'טון',
         binSimModalInputLabel: 'מספר פחים בסימולציה',
@@ -1064,6 +1065,7 @@
         simModalNote: 'Every ton added to recycling is deducted from landfill-bound waste (zero-sum).',
         simModalCancel: 'Cancel', simModalSave: 'Apply',
         binCountLabel: 'Bins:', simByTonsTitle: 'Add by tons', simByBinsTitle: 'Add by number of bins',
+        pdfBinsUnit: 'bins', pdfScenarioPrefix: 'Scenario:',
         binSimModalHeading: 'Bin Simulation',
         binSimModalPerBinLabel: 'Potential tons per bin', binSimModalTon: 'tons',
         binSimModalInputLabel: 'Number of bins in simulation',
@@ -2303,10 +2305,30 @@
     // PDF Export
     document.getElementById('downloadPdfButton').addEventListener('click', downloadPDF);
 
-    function downloadPDF(){
+    async function downloadPDF(){
       if(!currentMunicipality) return;
-      document.getElementById('printContent').innerHTML = buildPDFContent();
-      window.print();
+      const s = strings[currentLang];
+      const muniLabel = municipalitySelect.options[municipalitySelect.selectedIndex].text;
+      const btn = document.getElementById('downloadPdfButton');
+      btn.disabled = true;
+      try {
+        const pages = [];
+        // Page 1 — simulation summary
+        pages.push(buildPDFContent());
+        // Page 2 — dashboard (current multi-year model)
+        pages.push(pdfModelSection(s.economicTitle, muniLabel, currentModelSummary()));
+        // One page per saved scenario (if any)
+        let scs = [];
+        try { scs = await loadScenarios(); } catch(e){}
+        scs.filter(sc=>sc && sc.summary && sc.summary.years).forEach(sc=>{
+          const opt = sc.municipality ? municipalitySelect.querySelector(`option[value="${sc.municipality}"]`) : null;
+          const sub = [ opt ? opt.text : (sc.municipality||''), sc.description ].filter(Boolean).join(' · ');
+          pages.push(pdfModelSection(s.pdfScenarioPrefix + ' ' + sc.title, sub, sc.summary));
+        });
+        document.getElementById('printContent').innerHTML =
+          pages.map((p,i)=>`<div style="${i>0?'page-break-before:always;padding-top:10px;':''}">${p}</div>`).join('');
+        window.print();
+      } finally { btn.disabled = false; }
     }
 
     function buildPDFContent(){
@@ -2331,18 +2353,17 @@
       }
       const totalSavings = weightedSavingsTons * costPerTonVal;
 
-      // Recyclables rows — only materials with source > 0 or simulation delta > 0
-      // (skip materials managed in the bins section, e.g. Orange Bin — shown in its own section)
-      const binTargetKeys = new Set(binsConfig.map(c=>c.targetMaterialKey));
+      // Recyclables rows — only materials with source > 0 or simulation delta > 0. Orange bin is included here.
       let recRows = '';
       Object.entries(data.recyclables).forEach(([material, value])=>{
-        if(binTargetKeys.has(material)) return;
         const simTotal = getFinalSimulatedFor(material);
         const delta = simTotal - value;
+        const binCfg = binsConfig.find(b=>b.targetMaterialKey === material);
         if(value > 0 || delta > 0){
           const deltaColor = delta > 0 ? '#16a34a' : '#6b7280';
+          const binNote = (binCfg && (binsState[binCfg.id]||0) > 0) ? ` <span style="font-size:10px;color:#d97706;">(${binsState[binCfg.id]} ${strings[currentLang].pdfBinsUnit})</span>` : '';
           recRows += `<tr>
-            <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#374151;">${labelsRecyclables[currentLang][material]||material}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#374151;">${labelsRecyclables[currentLang][material]||material}${binNote}</td>
             <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#6b7280;text-align:left;">${formatNumber(value)}</td>
             <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:${deltaColor};text-align:left;font-weight:${delta>0?'bold':'normal'};">+${formatNumber(Math.max(0,delta))}</td>
             <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#111827;text-align:left;font-weight:bold;">${formatNumber(simTotal)}</td>
@@ -2360,29 +2381,6 @@
           <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#f97316;text-align:left;font-weight:bold;">${simVal.toFixed(2)}</td>
         </tr>`;
       });
-
-      // Bins section (only if bins added)
-      let binsSection = '';
-      const activeBins = binsConfig.filter(cfg=>(binsState[cfg.id]||0)>0);
-      if(activeBins.length){
-        let binsRows = activeBins.map(cfg=>`<tr>
-          <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#374151;">${cfg.label[currentLang]}</td>
-          <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#6b7280;text-align:left;">${binsState[cfg.id]}</td>
-          <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#d97706;text-align:left;font-weight:bold;">${formatPotential(binsState[cfg.id]*cfg.tonPerBin)} טון</td>
-        </tr>`).join('');
-        binsSection = `
-          <div style="margin-bottom:24px;">
-            <div style="font-size:13px;font-weight:bold;color:#374151;padding-bottom:8px;border-bottom:2px solid #fde68a;margin-bottom:12px;">פחי מחזור בסימולציה</div>
-            <table style="width:100%;border-collapse:collapse;">
-              <thead><tr style="background:#fffbeb;">
-                <th style="padding:7px 10px;text-align:right;font-size:11px;color:#92400e;border-bottom:1px solid #fde68a;">סוג פח</th>
-                <th style="padding:7px 10px;text-align:left;font-size:11px;color:#92400e;border-bottom:1px solid #fde68a;">מספר פחים</th>
-                <th style="padding:7px 10px;text-align:left;font-size:11px;color:#92400e;border-bottom:1px solid #fde68a;">טון פוטנציאלי</th>
-              </tr></thead>
-              <tbody>${binsRows}</tbody>
-            </table>
-          </div>`;
-      }
 
       const deltaRate = simulatedRate - originalRate;
       const deltaTag = deltaRate > 0.005
@@ -2477,11 +2475,56 @@
           </table>
         </div>
 
-        ${binsSection}
-
         <div style="border-top:1px solid #e5e7eb;padding-top:10px;font-size:10px;color:#9ca3af;text-align:right;">
           * כל הנתונים מבוססים על דוחות טופס 1 לשנת 2023 — כמויות פסולת ומיחזור שנתי של הרשות המקומית (המשרד להגנת הסביבה) | הופק: ${today}
         </div>`;
+    }
+
+    // ===== Multi-year model & scenarios in the PDF =====
+    function pdfMultiYearChartImage(summary){
+      try {
+        const s = strings[currentLang];
+        const off = document.createElement('canvas'); off.width = 680; off.height = 300;
+        const datasets = [
+          { label: s.chartStatusQuo, data: summary.statusQuoCum, borderColor:'#ef4444', backgroundColor:'transparent', fill:false, borderWidth:2.5, tension:0.25, pointRadius:0 },
+          { label: s.chartSimImproved, data: summary.simImprovedCum, borderColor:'#6366f1', backgroundColor:'transparent', fill:false, borderDash:[6,4], tension:0.25, pointRadius:0, borderWidth:2 },
+          { label: s.chartImproved, data: summary.improvedCum, borderColor:'#10b981', backgroundColor:'transparent', fill:false, tension:0.25, pointRadius:0, borderWidth:2 }
+        ];
+        const tmp = new Chart(off.getContext('2d'), { type:'line', data:{ labels: summary.years, datasets }, options:{ responsive:false, animation:false,
+          plugins:{ legend:{ labels:{ boxWidth:12, font:{size:11} } } },
+          scales:{ x:{ title:{ display:true, text:s.chartXAxis } }, y:{ ticks:{ callback:v=>'₪'+(v>=1000?(v/1000).toFixed(0)+'K':v) } } } } });
+        const url = off.toDataURL('image/png'); tmp.destroy();
+        return `<img src="${url}" style="width:100%;max-width:680px;margin-top:12px;">`;
+      } catch(e){ console.warn('pdf chart:', e.message); return ''; }
+    }
+    function pdfModelSection(title, subtitle, summary){
+      const s = strings[currentLang];
+      const kpi = (label, val, color)=>`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;"><div style="font-size:10px;color:#94a3b8;margin-bottom:3px;">${label}</div><div style="font-size:16px;font-weight:bold;color:${color};">${val}</div></div>`;
+      const payback = (p)=> p==null ? s.paybackNever : s.paybackYearUnit(p);
+      return `
+        <div style="font-size:16px;font-weight:bold;color:#111827;margin:0 0 2px;">${title}</div>
+        ${subtitle?`<div style="font-size:12px;color:#6b7280;margin:0 0 14px;">${subtitle}</div>`:'<div style="margin-bottom:14px;"></div>'}
+        <div style="font-size:11px;font-weight:bold;color:#16a34a;margin-bottom:6px;">${s.kpiGroupOppLabel}</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;">
+          ${kpi(s.kpiCumulativeLabel, '₪'+formatNumber(summary.netSaving), '#16a34a')}
+          ${kpi(s.kpiAnnualLabel, '₪'+formatNumber(summary.avgAnnual), '#1e293b')}
+          ${kpi(s.kpiPaybackLabel, payback(summary.payback), '#2563eb')}
+          ${kpi(s.kpiRoiLabel, summary.roi==null?'—':Math.round(summary.roi)+'%', summary.roi==null?'#9ca3af':(summary.roi>=0?'#16a34a':'#ef4444'))}
+        </div>
+        <div style="font-size:11px;font-weight:bold;color:#6366f1;margin-bottom:6px;">${s.kpiGroupSimLabel}</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px;">
+          ${kpi(s.kpiSimCumulativeLabel, '₪'+formatNumber(summary.simNetSaving), '#6366f1')}
+          ${kpi(s.kpiSimAnnualLabel, '₪'+formatNumber(summary.simAvgAnnual), '#1e293b')}
+          ${kpi(s.kpiSimPaybackLabel, payback(summary.simPayback), '#2563eb')}
+          ${kpi(s.kpiSimRoiLabel, summary.simRoi==null?'—':Math.round(summary.simRoi)+'%', summary.simRoi==null?'#9ca3af':(summary.simRoi>=0?'#16a34a':'#ef4444'))}
+        </div>
+        ${pdfMultiYearChartImage(summary)}`;
+    }
+    function currentModelSummary(){
+      const m = computeMultiYear();
+      return { years:m.years, statusQuoCum:m.statusQuoCum, improvedCum:m.improvedCum, simImprovedCum:m.simImprovedCum,
+        netSaving:m.netSaving, avgAnnual:m.avgAnnual, payback:m.payback, roi:m.roi,
+        simNetSaving:m.simNetSaving, simAvgAnnual:m.simAvgAnnual, simPayback:m.simPayback, simRoi:m.simRoi };
     }
 
     // Edit Source Modal
