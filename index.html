@@ -255,29 +255,6 @@
           </div>
         </div>
 
-        <!-- Bins -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-            <div class="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center">
-              <i class="fas fa-dumpster text-amber-500 text-xs"></i>
-            </div>
-            <h2 id="binsTitle" class="text-sm font-semibold text-gray-700">חישוב מחזור פוטנציאל לפי סוג פח</h2>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="min-w-full">
-              <thead>
-                <tr class="bg-gray-50 border-b border-gray-100">
-                  <th id="thBinType" class="px-5 py-3 text-start text-xs font-medium text-gray-400">סוג פח</th>
-                  <th id="thPotentialTon" class="px-5 py-3 text-start text-xs font-medium text-gray-400">טון פוטנציאלי</th>
-                  <th id="thBinCount" class="px-5 py-3 text-start text-xs font-medium text-gray-400">מספר פחים</th>
-                  <th id="thBinSim" class="px-5 py-3 text-start text-xs font-medium text-gray-400">סימולציה</th>
-                </tr>
-              </thead>
-              <tbody id="binsTable" class="divide-y divide-gray-50"></tbody>
-            </table>
-          </div>
-        </div>
-
       </div>
     </div>
 
@@ -967,6 +944,7 @@
         simModalTotalLabel: 'סה״כ לאחר הוספה', simModalRemainingLabel: 'פסולת להטמנה שתיוותר',
         simModalNote: 'כל טון שמתווסף למיחזור מופחת מהפסולת המיועדת להטמנה (סכום אפס).',
         simModalCancel: 'ביטול', simModalSave: 'החל',
+        binCountLabel: 'מספר פחים:', simByTonsTitle: 'הוסף לפי טון', simByBinsTitle: 'הוסף לפי מספר פחים',
         binSimModalHeading: 'סימולציית פחים',
         binSimModalPerBinLabel: 'טון פוטנציאלי לפח', binSimModalTon: 'טון',
         binSimModalInputLabel: 'מספר פחים בסימולציה',
@@ -1085,6 +1063,7 @@
         simModalTotalLabel: 'Total after addition', simModalRemainingLabel: 'Landfill waste remaining',
         simModalNote: 'Every ton added to recycling is deducted from landfill-bound waste (zero-sum).',
         simModalCancel: 'Cancel', simModalSave: 'Apply',
+        binCountLabel: 'Bins:', simByTonsTitle: 'Add by tons', simByBinsTitle: 'Add by number of bins',
         binSimModalHeading: 'Bin Simulation',
         binSimModalPerBinLabel: 'Potential tons per bin', binSimModalTon: 'tons',
         binSimModalInputLabel: 'Number of bins in simulation',
@@ -1282,12 +1261,10 @@
           const btn = row.querySelector('.sim-btn');
           if(!btn) return;
           const mat = btn.getAttribute('data-material');
-          const td = row.querySelector('td:first-child');
-          if(td) {
-            const badge = td.querySelector('span.mr-1\\.5'); // preserve badge
-            td.textContent = labelsRecyclables[lang][mat] || mat;
-            if(badge) td.appendChild(badge);
-          }
+          const ml = row.querySelector('.mat-label');
+          if(ml) ml.textContent = labelsRecyclables[lang][mat] || mat;
+          const bl = row.querySelector('.bin-count-lbl'); // orange-bin row only
+          if(bl) bl.textContent = strings[lang].binCountLabel;
         });
         document.querySelectorAll('#nonRecyclablesTable tr').forEach(row=>{
           const sv = row.querySelector('.simulated-value');
@@ -1455,32 +1432,33 @@
       landfillSimulated = originalNonRecyclables["General Household Landfill"];
       binsState = { orange: 0 };
 
-      // Recyclables table (skip materials managed in the bins section, e.g. Orange Bin)
-      const binTargetKeys = new Set(binsConfig.map(c=>c.targetMaterialKey));
+      // Recyclables table — the orange bin is included here with two options: by tons or by number of bins
+      const s0 = strings[currentLang];
       recyclablesTable.innerHTML = '';
       Object.entries(data.recyclables).forEach(([material, value])=>{
-        if(binTargetKeys.has(material)) return;
+        const binCfg = binsConfig.find(b=>b.targetMaterialKey === material);
         const isZero = value === 0;
         const label = labelsRecyclables[currentLang][material] || material;
         const row = document.createElement('tr');
         row.className = isZero ? 'bg-amber-50 hover:bg-amber-100' : 'hover:bg-gray-50';
+        const binCountLine = binCfg
+          ? `<div class="text-[11px] text-gray-400 mt-0.5"><span class="bin-count-lbl">${s0.binCountLabel}</span> <span class="bin-count-display font-semibold" data-binid="${binCfg.id}">${binsState[binCfg.id]||0}</span></div>`
+          : '';
+        const actionCell = binCfg
+          ? `<div class="flex items-center gap-1.5">
+               <button class="sim-btn w-8 h-8 flex items-center justify-center rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-all" data-material="${material}" title="${s0.simByTonsTitle}"><i class="fas fa-flask text-xs"></i></button>
+               <button class="bin-sim-btn w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-500 hover:bg-amber-100 transition-all" data-binid="${binCfg.id}" title="${s0.simByBinsTitle}"><i class="fas fa-dumpster text-xs"></i></button>
+             </div>`
+          : `<button class="sim-btn w-8 h-8 flex items-center justify-center rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-all" data-material="${material}" title="${s0.simByTonsTitle}"><i class="fas fa-flask text-xs"></i></button>`;
         row.innerHTML = `
-          <td class="px-5 py-3 text-sm text-gray-700">
-            ${label}
-          </td>
+          <td class="px-5 py-3 text-sm text-gray-700"><span class="mat-label">${label}</span>${binCountLine}</td>
           <td class="px-5 py-3 text-sm text-gray-400 tabular-nums">${formatNumber(value)}</td>
           <td class="px-5 py-3 text-sm tabular-nums text-gray-300 sim-delta-display" data-material="${material}">0.00</td>
-          <td class="px-5 py-3">
-            <button class="sim-btn w-8 h-8 flex items-center justify-center rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-all" data-material="${material}" title="הזן תוספת לסימולציה">
-              <i class="fas fa-flask text-xs"></i>
-            </button>
-          </td>`;
+          <td class="px-5 py-3">${actionCell}</td>`;
         recyclablesTable.appendChild(row);
       });
-      document.querySelectorAll('.sim-btn').forEach(b=>b.addEventListener('click', (e)=>{
-        const m = e.currentTarget.getAttribute('data-material');
-        openSimModal(m);
-      }));
+      document.querySelectorAll('#recyclablesTable .sim-btn').forEach(b=>b.addEventListener('click', (e)=>openSimModal(e.currentTarget.getAttribute('data-material'))));
+      document.querySelectorAll('#recyclablesTable .bin-sim-btn').forEach(b=>b.addEventListener('click', (e)=>openBinSimModal(e.currentTarget.getAttribute('data-binid'))));
 
       // Non-recyclables table
       nonRecyclablesTable.innerHTML = '';
@@ -1515,6 +1493,7 @@
     }
 
     function buildBinsTable(){
+      if(!binsTable) return; // orange bin is now shown inside the recyclables table; no separate bins section
       binsTable.innerHTML = '';
       binsConfig.forEach(cfg=>{
         const row = document.createElement('tr');
